@@ -1,0 +1,574 @@
+// =============================================================================
+// Module: GL Fill
+// =============================================================================
+/**
+ * Renders fill and wash layers into the fill mask on the GPU.
+ *
+ * The mask is a half-float framebuffer that stores paint in log space:
+ *   r = Σ −ln(1 − a) over painted layers
+ *   b = Σ −ln(1 − a) over silhouette layers only (fills)
+ * and the composite shader turns it back into coverage, 1 − e^−r. That is
+ * exactly what Canvas2D source-over painting produces, but every term is a
+ * sum, so draw order does not matter. Polygons are filled by
+ * stencil-then-cover (fan.vert), two draws per antialiasing sample; polygons
+ * that cannot share a pixel share those draws.
+ */
+
+import { Renderer, Cwidth, Cheight, Density } from "../core/target.js";
+import { Mix } from "../core/color.js";
+import { createProgram } from "../core/gl/utils.js";
+import { createFramebuffer } from "../core/compositor_runtime.js";
+import {
+  beginDirectMaskDraw,
+  endDirectMaskDraw,
+  resetDirectShaderTracking,
+} from "../core/renderer_runtime.js";
+import fanVertSrc from "./fan.vert";
+import fanFragSrc from "./fan.frag";
+import fullscreenVertSrc from "../core/gl/shader.vert";
+import blurFragSrc from "./blur.frag";
+import wetFragSrc from "./wet.frag";
+
+// =============================================================================
+// Section: State
+// =============================================================================
+
+const FAN_WORDS = 6; // one fan triangle: centre.xy, start.xy, end.xy
+const MAX_ALPHA = 0.9999; // keeps −ln(1 − a) finite for opaque washes
+// Sub-pixel offsets (device px) that antialias polygon fills, by sample
+// count. Fill layers use 2: the many overlapping layers smooth their edges
+// further. A wash is a single hard-edged polygon and uses 4 (rotated grid).
+const JITTER = {
+  2: [[0.25, 0.25], [-0.25, -0.25]],
+  4: [[0.125, 0.375], [0.375, -0.125], [-0.125, -0.375], [-0.375, 0.125]],
+};
+
+let gl = null;
+const fan = { program: null, vao: null, buffer: null, uMatrix: null, uWeight: null, uJitter: null, uShape: null };
+const blur = { program: null, vao: null };
+const wet = { program: null, vao: null };
+
+let fanData = new Float32Array(4096 * FAN_WORDS);
+let fanCount = 0;
+// Queued polygons: first triangle, triangle count, log-domain weight,
+// antialiasing sample count, silhouette flag, and padded device-pixel bounds
+// (minX, minY, maxX, maxY).
+const POLY_WORDS = 9;
+let polygons = [];
+// The queued fans regrouped for drawing (see groupPolygons).
+let drawData = new Float32Array(4096 * FAN_WORDS);
+
+// User space → device pixels (a, b, c, d, e, f, as in DOMMatrix).
+const matrix = new Float64Array(6);
+let dirtyRect = null;
+
+// Draw queued layers before the composite reads or clears the fill mask.
+Mix.beforeFillMaskAccess = () => flushFill();
+
+// =============================================================================
+// Section: GL resources
+// =============================================================================
+
+function releaseGlResources() {
+  if (!gl || gl.isContextLost?.()) return;
+  for (const p of [fan, blur, wet]) {
+    if (p.program) gl.deleteProgram(p.program);
+    if (p.vao) gl.deleteVertexArray(p.vao);
+    if (p.buffer) gl.deleteBuffer(p.buffer);
+    p.program = p.vao = p.buffer = null;
+  }
+}
+
+function setupProgram(target, vertSrc, fragSrc, attributes, words, divisor) {
+  target.program = createProgram(gl, vertSrc, fragSrc);
+  target.uMatrix = gl.getUniformLocation(target.program, "u_matrix");
+  target.uWeight = gl.getUniformLocation(target.program, "u_weight");
+  target.uJitter = gl.getUniformLocation(target.program, "u_jitter");
+  target.uShape = gl.getUniformLocation(target.program, "u_shape");
+  target.buffer = gl.createBuffer();
+  target.vao = gl.createVertexArray();
+  gl.bindVertexArray(target.vao);
+  gl.bindBuffer(gl.ARRAY_BUFFER, target.buffer);
+  for (const [name, size, offset] of attributes) {
+    const loc = gl.getAttribLocation(target.program, name);
+    if (loc < 0) continue;
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, size, gl.FLOAT, false, words * 4, offset * 4);
+    gl.vertexAttribDivisor(loc, divisor);
+  }
+  gl.bindVertexArray(null);
+}
+
+function ensureGl() {
+  const nextGl = Renderer.drawingContext;
+  if (gl === nextGl && fan.program) return;
+  releaseGlResources();
+  gl = nextGl;
+  setupProgram(fan, fanVertSrc, fanFragSrc, [["a_pos", 2, 0]], 2, 0);
+  blur.program = createProgram(gl, fullscreenVertSrc, blurFragSrc);
+  blur.vao = gl.createVertexArray();
+  for (const name of ["u_src", "u_dstSize", "u_step", "u_level", "u_ratio"]) {
+    blur[name] = gl.getUniformLocation(blur.program, name);
+  }
+  wet.program = createProgram(gl, fullscreenVertSrc, wetFragSrc);
+  wet.vao = gl.createVertexArray();
+  for (const name of ["u_blur", "u_dstSize", "u_level", "u_wet"]) {
+    wet[name] = gl.getUniformLocation(wet.program, name);
+  }
+}
+
+// A fresh bufferData each flush lets the driver hand out new storage instead
+// of waiting for the GPU to finish reading the previous fill's vertices.
+function upload(target, data, count, words) {
+  gl.bindBuffer(gl.ARRAY_BUFFER, target.buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, data.subarray(0, count * words), gl.STREAM_DRAW);
+}
+
+// =============================================================================
+// Section: Queue
+// =============================================================================
+
+const logWeight = (alpha) => -Math.log1p(-Math.min(alpha, MAX_ALPHA));
+
+function growFan(extra) {
+  if ((fanCount + extra) * FAN_WORDS <= fanData.length) return;
+  let size = fanData.length * 2;
+  while (size < (fanCount + extra) * FAN_WORDS) size *= 2;
+  const next = new Float32Array(size);
+  next.set(fanData);
+  fanData = next;
+}
+
+function markBounds(minX, minY, maxX, maxY) {
+  const [a, b, c, d, e, f] = matrix;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const [x, y] of [[minX, minY], [maxX, minY], [minX, maxY], [maxX, maxY]]) {
+    const tx = a * x + c * y + e;
+    const ty = b * x + d * y + f;
+    if (tx < x0) x0 = tx;
+    if (tx > x1) x1 = tx;
+    if (ty < y0) y0 = ty;
+    if (ty > y1) y1 = ty;
+  }
+  const p = 1;
+  x0 -= p; y0 -= p; x1 += p; y1 += p;
+  if (!dirtyRect) dirtyRect = { minX: x0, minY: y0, maxX: x1, maxY: y1 };
+  else {
+    if (x0 < dirtyRect.minX) dirtyRect.minX = x0;
+    if (y0 < dirtyRect.minY) dirtyRect.minY = y0;
+    if (x1 > dirtyRect.maxX) dirtyRect.maxX = x1;
+    if (y1 > dirtyRect.maxY) dirtyRect.maxY = y1;
+  }
+  return [x0, y0, x1, y1];
+}
+
+/**
+ * Sets the user-space → device-pixel transform for the layers queued next.
+ * Flushes queued layers drawn under a different transform.
+ * @param {number[]} m - (a, b, c, d, e, f), as in DOMMatrix.
+ */
+export function setFillTransform(m) {
+  if (m.every((v, i) => v === matrix[i])) return;
+  flushFill();
+  matrix.set(m);
+}
+
+/**
+ * Queues a polygon layer with opacity `alpha`.
+ * @param {{x: number, y: number}[]} vertices - Polygon in user space.
+ * @param {number} alpha - Opacity 0..1.
+ * @param {2|4} [samples=2] - Antialiasing samples per pixel.
+ * @param {boolean} [shape=false] - Also paint the silhouette channel.
+ */
+export function queuePolygon(vertices, alpha, samples = 2, shape = false) {
+  const n = vertices.length;
+  if (n < 3 || alpha <= 0) return;
+
+  let cx = 0, cy = 0, area = 0;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (let i = 0; i < n; i++) {
+    const p = vertices[i];
+    const q = vertices[i + 1 < n ? i + 1 : 0];
+    cx += p.x;
+    cy += p.y;
+    area += p.x * q.y - q.x * p.y;
+    if (p.x < minX) minX = p.x;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.y > maxY) maxY = p.y;
+  }
+  if (area === 0) return;
+  cx /= n;
+  cy /= n;
+
+  growFan(n);
+  polygons.push(fanCount, n, logWeight(alpha), samples, shape ? 1 : 0, ...markBounds(minX, minY, maxX, maxY));
+  let o = fanCount * FAN_WORDS;
+  for (let i = 0; i < n; i++, o += FAN_WORDS) {
+    const p = vertices[i];
+    const q = vertices[i + 1 < n ? i + 1 : 0];
+    fanData[o] = cx;
+    fanData[o + 1] = cy;
+    fanData[o + 2] = p.x;
+    fanData[o + 3] = p.y;
+    fanData[o + 4] = q.x;
+    fanData[o + 5] = q.y;
+  }
+  fanCount += n;
+}
+
+/**
+ * Regroups the queued polygons so that polygons that cannot share a pixel are
+ * drawn together. A polygon goes one level above every earlier polygon whose
+ * bounds it touches, so polygons on one level are disjoint, and at any pixel
+ * the polygons covering it still paint in the order they were queued: the
+ * mask comes out bit for bit the same, in far fewer draws when many small
+ * polygons are queued. Copies the fans into drawData, group by group.
+ * @returns {{first: number, count: number, weight: number, samples: number, shape: number}[]}
+ */
+function groupPolygons() {
+  const n = polygons.length / POLY_WORDS;
+  const level = new Int32Array(n);
+  const groups = new Map();
+  for (let i = 0; i < n; i++) {
+    const a = i * POLY_WORDS;
+    let l = 0;
+    for (let j = 0; j < i; j++) {
+      const b = j * POLY_WORDS;
+      if (level[j] >= l &&
+          polygons[a + 5] <= polygons[b + 7] && polygons[b + 5] <= polygons[a + 7] &&
+          polygons[a + 6] <= polygons[b + 8] && polygons[b + 6] <= polygons[a + 8]) {
+        l = level[j] + 1;
+      }
+    }
+    level[i] = l;
+    const key = `${l}|${polygons[a + 2]}|${polygons[a + 3]}|${polygons[a + 4]}`;
+    let group = groups.get(key);
+    if (!group) {
+      group = { level: l, polys: [], weight: polygons[a + 2], samples: polygons[a + 3], shape: polygons[a + 4] };
+      groups.set(key, group);
+    }
+    group.polys.push(a);
+  }
+
+  if (drawData.length < fanData.length) drawData = new Float32Array(fanData.length);
+  const ordered = [...groups.values()].sort((g, h) => g.level - h.level);
+  let o = 0;
+  for (const group of ordered) {
+    group.first = o / FAN_WORDS;
+    for (const a of group.polys) {
+      const start = polygons[a] * FAN_WORDS;
+      const words = polygons[a + 1] * FAN_WORDS;
+      drawData.set(fanData.subarray(start, start + words), o);
+      o += words;
+    }
+    group.count = o / FAN_WORDS - group.first;
+  }
+  return ordered;
+}
+
+/**
+ * Draws all queued layers into the fill mask and clears the queue.
+ */
+export function flushFill() {
+  if (fanCount === 0) return;
+  const mask = Mix.mask;
+  if (!mask || !Renderer?.drawingContext || Renderer.drawingContext.isContextLost?.()) {
+    fanCount = 0;
+    polygons = [];
+    dirtyRect = null;
+    return;
+  }
+  ensureGl();
+
+  // User space → device pixels → clip space. Row 0 of the mask is the top of
+  // the canvas, matching the stroke mask and the composite shader.
+  const w = mask.width * mask.density;
+  const h = mask.height * mask.density;
+  const [a, b, c, d, e, f] = matrix;
+  const clip = new Float32Array([
+    (2 * a) / w, (2 * b) / h, 0,
+    (2 * c) / w, (2 * d) / h, 0,
+    (2 * e) / w - 1, (2 * f) / h - 1, 1,
+  ]);
+
+  // Every write is confined to the mask's paint bounds, so the clear can be
+  // confined to the same region.
+  if (dirtyRect) Mix.markDirtyRect(mask, dirtyRect);
+  dirtyRect = null;
+  const bounds = mask.dirtyRect;
+  if (!bounds) {
+    fanCount = 0;
+    polygons = [];
+    return;
+  }
+
+  const targetState = beginDirectMaskDraw(Renderer, gl, mask);
+  gl.enable(gl.SCISSOR_TEST);
+  gl.scissor(bounds.minX, bounds.minY, bounds.maxX - bounds.minX, bounds.maxY - bounds.minY);
+  // Culling would drop the back faces that count negative winding.
+  const hadCullFace = gl.isEnabled(gl.CULL_FACE);
+  if (hadCullFace) gl.disable(gl.CULL_FACE);
+  gl.enable(gl.BLEND);
+  gl.blendEquation(gl.FUNC_ADD);
+  gl.blendFunc(gl.ONE, gl.ONE);
+
+  if (fanCount > 0) {
+    gl.useProgram(fan.program);
+    gl.uniformMatrix3fv(fan.uMatrix, false, clip);
+    gl.bindVertexArray(fan.vao);
+    const groups = groupPolygons();
+    upload(fan, drawData, fanCount, FAN_WORDS);
+    gl.enable(gl.STENCIL_TEST);
+    gl.stencilMask(0xff);
+    for (const group of groups) {
+      const first = group.first * 3;
+      const count = group.count * 3;
+      const jitter = JITTER[group.samples];
+      for (const [jx, jy] of jitter) {
+        gl.uniform2f(fan.uJitter, (2 * jx) / w, (2 * jy) / h);
+        // Count the winding number: front faces add, back faces subtract.
+        gl.colorMask(false, false, false, false);
+        gl.stencilFunc(gl.ALWAYS, 0, 0xff);
+        gl.stencilOpSeparate(gl.FRONT, gl.KEEP, gl.KEEP, gl.INCR_WRAP);
+        gl.stencilOpSeparate(gl.BACK, gl.KEEP, gl.KEEP, gl.DECR_WRAP);
+        gl.drawArrays(gl.TRIANGLES, first, count);
+        // Paint where it is non-zero, once per pixel, resetting the stencil.
+        gl.colorMask(true, true, true, true);
+        gl.stencilFunc(gl.NOTEQUAL, 0, 0xff);
+        gl.stencilOp(gl.KEEP, gl.KEEP, gl.ZERO);
+        gl.uniform1f(fan.uWeight, group.weight / jitter.length);
+        gl.uniform1f(fan.uShape, group.shape);
+        gl.drawArrays(gl.TRIANGLES, first, count);
+      }
+    }
+    gl.disable(gl.STENCIL_TEST);
+  }
+  if (hadCullFace) gl.enable(gl.CULL_FACE);
+  gl.bindVertexArray(null);
+  gl.disable(gl.SCISSOR_TEST);
+  endDirectMaskDraw(Renderer, gl, targetState);
+  resetDirectShaderTracking(Renderer, gl);
+
+  fanCount = 0;
+  polygons = [];
+}
+
+/**
+ * Clears the fill mask's paint and stencil. Queued layers are dropped.
+ * @param {object} target - Fill mask framebuffer.
+ */
+export function clearFillTarget(target) {
+  fanCount = 0;
+  polygons = [];
+  dirtyRect = null;
+  const context = Renderer.drawingContext;
+  const state = beginDirectMaskDraw(Renderer, context, target);
+  context.depthMask(true);
+  context.clearColor(0, 0, 0, 0);
+  context.clearDepth(1);
+  context.clearStencil(0);
+  context.stencilMask(0xff);
+  // All writes since the last clear stayed inside the paint bounds.
+  const rect = target.dirtyRect;
+  if (rect) {
+    context.enable(context.SCISSOR_TEST);
+    context.scissor(rect.minX, rect.minY, rect.maxX - rect.minX, rect.maxY - rect.minY);
+  }
+  context.clear(context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT | context.STENCIL_BUFFER_BIT);
+  context.disable(context.SCISSOR_TEST);
+  endDirectMaskDraw(Renderer, context, state);
+}
+
+// =============================================================================
+// Section: Watercolour blur
+// =============================================================================
+
+// Half-resolution half-float targets, made for the current canvas size.
+const halfTarget = () =>
+  createFramebuffer(Renderer, {
+    width: Cwidth,
+    height: Cheight,
+    density: Density / 2,
+    format: "half-float",
+    antialias: false,
+    depth: false,
+    stencil: false,
+  });
+const fitsCanvas = (t) =>
+  t.width === Cwidth && t.height === Cheight &&
+  (t.pixelDensity?.() ?? t.density) === Density / 2;
+
+// Two blur targets: horizontal pass, then vertical.
+function ensureBlurTargets() {
+  const current = Renderer.fillBlurTargets;
+  if (current && current.every(fitsCanvas)) return current;
+  current?.forEach((t) => t.remove?.());
+  Renderer.fillBlurTargets = [halfTarget(), halfTarget()];
+  return Renderer.fillBlurTargets;
+}
+
+/**
+ * Blurs the fill mask's paint bounds into a half-resolution target for the
+ * watercolour composite (see blur.frag). Queued layers are drawn first.
+ * @param {number} sigma - Gaussian σ of the paint and share inside, in mask
+ *   pixels; the silhouette uses half of it.
+ * @param {number} level - Silhouette edge level (log-domain paint).
+ * @returns {object|null} The blurred target, or null when nothing is painted.
+ */
+export function blurFillMask(sigma, level) {
+  flushFill();
+  const mask = Mix.mask;
+  const rect = mask?.dirtyRect;
+  if (!rect || !Renderer?.drawingContext || Renderer.drawingContext.isContextLost?.()) return null;
+  ensureGl();
+  const targets = ensureBlurTargets();
+  const maskW = mask.width * mask.density;
+  const maskH = mask.height * mask.density;
+  const w = Math.round(maskW / 2);
+  const h = Math.round(maskH / 2);
+  // Cover everything the composite reads: its rect is the paint bounds plus
+  // a few pixels (composite.js), sampled bilinearly. Anything less reads a
+  // previous fill's blur. The vertical pass reads the horizontal one up to
+  // 3σ above and below.
+  const margin = 6;
+  const pad = Math.ceil((3 * sigma) / 2) + 1;
+  const x0 = Math.max(0, Math.floor(rect.minX / 2) - margin);
+  const x1 = Math.min(w, Math.ceil(rect.maxX / 2) + margin);
+  const y0 = Math.max(0, Math.floor(rect.minY / 2) - margin);
+  const y1 = Math.min(h, Math.ceil(rect.maxY / 2) + margin);
+  const passes = [
+    [mask, targets[0], [sigma / 4 / maskW, 0], level, Math.max(0, y0 - pad), Math.min(h, y1 + pad)],
+    [targets[0], targets[1], [0, sigma / 4 / maskH], 0, y0, y1],
+  ];
+
+  gl.disable(gl.BLEND);
+  gl.enable(gl.SCISSOR_TEST);
+  gl.useProgram(blur.program);
+  gl.bindVertexArray(blur.vao);
+  gl.uniform1i(blur.u_src, 0);
+  gl.uniform2f(blur.u_dstSize, w, h);
+  gl.uniform1f(blur.u_ratio, 2);
+  gl.activeTexture(gl.TEXTURE0);
+  for (const [src, dst, step, passLevel, py0, py1] of passes) {
+    const state = beginDirectMaskDraw(Renderer, gl, dst);
+    gl.scissor(x0, py0, x1 - x0, py1 - py0);
+    gl.bindTexture(gl.TEXTURE_2D, src.colorTexture);
+    gl.uniform2f(blur.u_step, step[0], step[1]);
+    gl.uniform1f(blur.u_level, passLevel);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    endDirectMaskDraw(Renderer, gl, state);
+  }
+  gl.disable(gl.SCISSOR_TEST);
+  gl.enable(gl.BLEND);
+  gl.bindVertexArray(null);
+  resetDirectShaderTracking(Renderer, gl);
+  return targets[1];
+}
+
+// =============================================================================
+// Section: Wet paper
+// =============================================================================
+/**
+ * Paper left wet by recent watercolour fills, so that a new fill touching
+ * them loses its edge there and creeps into them (wet-in-wet). The buffer
+ * stores (wetness, wetness · fill index) per pixel; a fill `age` fills later
+ * reads it at wetness · WET_KEEP^(age − 1). Everything dries when the frame
+ * is flushed (render(), the end of p5's draw()) or the drawing target
+ * changes: the buffer is cleared and indices restart, so a frame never
+ * depends on earlier ones.
+ */
+const WET_KEEP = 0.45;
+// Fill indices are stored in half floats; past this many fills in one frame
+// the paper dries.
+const WET_MAX_INDEX = 1000;
+const wetState = { index: 0, target: null, dirty: false };
+
+// Dry all paint drawn so far.
+function dryFills() {
+  wetState.index = 0;
+}
+Mix.afterFlush = dryFills;
+
+function clearWetTarget(target) {
+  const state = beginDirectMaskDraw(Renderer, gl, target);
+  gl.disable(gl.SCISSOR_TEST);
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  endDirectMaskDraw(Renderer, gl, state);
+  wetState.dirty = false;
+}
+
+function ensureWetTarget() {
+  let target = Renderer.fillWetTarget;
+  if (!target || !fitsCanvas(target)) {
+    target?.remove?.();
+    target = Renderer.fillWetTarget = halfTarget();
+    wetState.dirty = true;
+    wetState.index = 0;
+  }
+  if (wetState.index >= WET_MAX_INDEX) wetState.index = 0;
+  // A new frame starts on dry paper.
+  if (wetState.index === 0 && wetState.dirty) clearWetTarget(target);
+  return target;
+}
+
+/**
+ * Returns the wet-paper inputs of the next watercolour fill's composite: the
+ * buffer and (current index, unused, drying per fill, unused).
+ * @param {object} drawTarget - The target being painted (framebuffer or canvas).
+ * @returns {{texture: object, info: number[]}}
+ */
+export function wetPaper(drawTarget) {
+  ensureGl();
+  if (wetState.target !== drawTarget) {
+    dryFills();
+    wetState.target = drawTarget;
+  }
+  const texture = ensureWetTarget();
+  wetState.index++;
+  return { texture, info: [wetState.index, 0, WET_KEEP, 0] };
+}
+
+/**
+ * Marks the paper under the fill just composited as wet, from its blurred
+ * silhouette (the last blurFillMask() result).
+ * @param {object} rect - The fill's paint bounds in mask pixels, taken before
+ *   the composite cleared the mask.
+ * @param {number} level - Silhouette edge level.
+ * @param {number} wetness - How wet the fill leaves the paper, 0..1.
+ */
+export function wetFill(rect, level, wetness) {
+  const target = Renderer.fillWetTarget;
+  const blurred = Renderer.fillBlurTargets?.[1];
+  if (!target || !blurred || !rect || wetness <= 0) return;
+  const w = Math.round((Cwidth * Density) / 2);
+  const h = Math.round((Cheight * Density) / 2);
+  const x0 = Math.max(0, Math.floor(rect.minX / 2));
+  const y0 = Math.max(0, Math.floor(rect.minY / 2));
+  const x1 = Math.min(w, Math.ceil(rect.maxX / 2));
+  const y1 = Math.min(h, Math.ceil(rect.maxY / 2));
+  if (x1 <= x0 || y1 <= y0) return;
+
+  const state = beginDirectMaskDraw(Renderer, gl, target);
+  gl.disable(gl.BLEND);
+  gl.enable(gl.SCISSOR_TEST);
+  gl.scissor(x0, y0, x1 - x0, y1 - y0);
+  gl.useProgram(wet.program);
+  gl.bindVertexArray(wet.vao);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, blurred.colorTexture);
+  gl.uniform1i(wet.u_blur, 0);
+  gl.uniform2f(wet.u_dstSize, w, h);
+  gl.uniform1f(wet.u_level, level);
+  gl.uniform2f(wet.u_wet, wetness, wetState.index);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+  gl.disable(gl.SCISSOR_TEST);
+  gl.enable(gl.BLEND);
+  gl.bindVertexArray(null);
+  endDirectMaskDraw(Renderer, gl, state);
+  resetDirectShaderTracking(Renderer, gl);
+  wetState.dirty = true;
+}

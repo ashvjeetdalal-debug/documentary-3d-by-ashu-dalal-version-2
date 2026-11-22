@@ -1,0 +1,14 @@
+{
+  "name": "p5-brush-film-kit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "stills": "node render_brush.mjs --stills=0.5,1.5,3.0",
+    "preview": "node render_brush.mjs --video --fps=30 --out=out/preview.mp4",
+    "final": "node render_brush.mjs --video --fps=30 --crf=16 --out=out/final.mp4"
+  },
+  "dependencies": {
+    "puppeteer": "25.12.0"
+  }
+}

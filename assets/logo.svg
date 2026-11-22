@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="gradBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#16171a"/>
+      <stop offset="100%" stop-color="#0e0f11"/>
+    </linearGradient>
+    <linearGradient id="grad3D" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d2ff"/>
+      <stop offset="100%" stop-color="#3a7bd5"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Container background -->
+  <rect x="16" y="16" width="224" height="224" rx="44" fill="url(#gradBg)" stroke="#2b2d33" stroke-width="3"/>
+
+  <!-- Evidence / 3D Perspective Grid -->
+  <line x1="20" y1="80" x2="236" y2="80" stroke="#22252a" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <line x1="20" y1="140" x2="236" y2="140" stroke="#22252a" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <line x1="20" y1="196" x2="236" y2="196" stroke="#22252a" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <line x1="80" y1="20" x2="80" y2="236" stroke="#22252a" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <line x1="140" y1="20" x2="140" y2="236" stroke="#22252a" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <line x1="196" y1="20" x2="196" y2="236" stroke="#22252a" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+  <!-- Tilted Archival Photo Card (Left - Documentary) -->
+  <g transform="rotate(-6 86 116)" filter="url(#shadow)">
+    <rect x="42" y="68" width="82" height="90" rx="4" fill="#ebe4d3" stroke="#d3caa8" stroke-width="1.5"/>
+    <rect x="49" y="75" width="68" height="58" rx="2" fill="#2b2e34"/>
+    <!-- Silhouette -->
+    <circle cx="83" cy="98" r="12" fill="#585c66"/>
+    <path d="M66 128 C66 114 73 111 83 111 C93 111 100 114 100 128 Z" fill="#585c66"/>
+    <rect x="54" y="141" width="44" height="5" rx="1.5" fill="#aba08a"/>
+  </g>
+
+  <!-- Isometric 3D Cube (Right - 3D Engine) -->
+  <g transform="translate(142, 85)" filter="url(#shadow)">
+    <!-- Top Face -->
+    <polygon points="32,0 64,16 32,32 0,16" fill="#3a7bd5" stroke="#60a5fa" stroke-width="1.5"/>
+    <!-- Left Face -->
+    <polygon points="0,16 32,32 32,70 0,54" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.5"/>
+    <!-- Right Face -->
+    <polygon points="32,32 64,16 64,54 32,70" fill="#2563eb" stroke="#60a5fa" stroke-width="1.5"/>
+    <!-- 3D coordinate axes / wireframe -->
+    <line x1="32" y1="32" x2="32" y2="6" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="32" y1="32" x2="56" y2="44" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+    <line x1="32" y1="32" x2="8" y2="44" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Narrative Red String connecting Photo Pin to 3D Vertex -->
+  <path d="M 88 78 Q 130 135 174 117" fill="none" stroke="#d0312d" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Red Pushpins -->
+  <circle cx="88" cy="78" r="7" fill="#d0312d"/>
+  <circle cx="88" cy="78" r="2.5" fill="#ff7a76"/>
+  <circle cx="174" cy="117" r="7" fill="#d0312d"/>
+  <circle cx="174" cy="117" r="2.5" fill="#ff7a76"/>
+
+  <!-- Hand-drawn Red Wobble Highlight Circle -->
+  <ellipse cx="174" cy="120" rx="36" ry="26" fill="none" stroke="#d0312d" stroke-width="2.5" stroke-dasharray="80 14" transform="rotate(-8 174 120)"/>
+
+  <!-- Documentary Camera Frame Corners -->
+  <path d="M 36 50 L 36 36 L 50 36" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+  <path d="M 220 50 L 220 36 L 206 36" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+  <path d="M 36 206 L 36 220 L 50 220" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+  <path d="M 220 206 L 220 220 L 206 220" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+
+  <!-- Recording Status Indicator -->
+  <circle cx="56" cy="54" r="5" fill="#d0312d"/>
+  <text x="68" y="58" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="10" font-weight="800" letter-spacing="1.5" opacity="0.9">REC</text>
+
+  <!-- Title Badge (Ashu Dalal 3D V2) -->
+  <rect x="44" y="196" width="168" height="26" rx="6" fill="#1b1d22" stroke="#d0312d" stroke-width="1.5"/>
+  <text x="128" y="213" fill="#ffffff" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="10.5" font-weight="700" letter-spacing="0.8">DOCUMENTARY 3D V2</text>
+</svg>

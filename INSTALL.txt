@@ -1,0 +1,49 @@
+DOCUMENTARY 3D BY ASHU DALAL VERSION 2 - SETUP GUIDE
+=============================================================
+
+System Requirements:
+  1. Node.js (v20 or newer): https://nodejs.org
+  2. Python (v3.9 or newer): https://python.org
+  3. FFmpeg (with libx264, aac, and ebur128 filter enabled): https://ffmpeg.org
+
+Quick Verification:
+  node -v
+  python --version
+  ffmpeg -version
+
+Dependencies Installation:
+--------------------------
+1. Python Dependencies:
+   pip install numpy pillow opencv-python
+
+   # Optional (for advanced voice & music tools from lemo-opuscar):
+   pip install -r skills/lemo-opuscar/requirements.txt
+
+2. 3D Renderer (Puppeteer + Three.js):
+   cd skills/documentary-3d/scripts/kit
+   npm install
+
+3. p5.brush Rendering Kit:
+   cd skills/p5-brush/kit
+   npm install
+
+   (Note: If you have Google Chrome already installed on Windows and want to avoid downloading Chromium:
+    set PUPPETEER_SKIP_DOWNLOAD=1
+    npm install
+    set CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe)
+
+Quick Smoke Tests:
+------------------
+1. Test 3D procedural renderer:
+   cd skills/documentary-3d/scripts/kit
+   npm run stills
+
+2. Test p5.brush natural media renderer:
+   cd skills/p5-brush/kit
+   npm run stills
+
+3. Test Evidence Board engine:
+   cd skills/documentary-3d/scripts
+   python board_engine.py stills 2,5
+
+You are ready to create world-class code-driven films!

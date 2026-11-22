@@ -1,0 +1,32 @@
+# Logs & OS Caches
+*.log
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+.venv/
+env/
+__pycache__/
+*.pyc
+
+# Local Environment Variables & Credentials
+.env
+.env.*
+!.env.example
+
+# Rendering Output Artifacts (Do not track heavy generated video frames)
+out/
+stills/
+*.mp4
+*.m4v
+*.mov
+*.wav
+*.mp3
+!skills/lemo-opuscar/core/audio/*.wav
+!skills/lemo-opuscar/core/audio/*.mp3
+
+# Testing & temporary scratch directories
+scratch/
+test-output/
+tmp/
