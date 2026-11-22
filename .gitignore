@@ -15,16 +15,18 @@ __pycache__/
 .env.*
 !.env.example
 
-# Rendering Output Artifacts (Do not track heavy generated video frames)
-out/
-stills/
+# Root Rendering Output Artifacts only (do not ignore demo stills or assets)
+/out/
+/stills/
+skills/documentary-3d/scripts/kit/stills/
+skills/documentary-3d/scripts/kit/out/
+skills/p5-brush/kit/stills/
+skills/p5-brush/kit/out/
+
+# Big video/audio exports
 *.mp4
 *.m4v
 *.mov
-*.wav
-*.mp3
-!skills/lemo-opuscar/core/audio/*.wav
-!skills/lemo-opuscar/core/audio/*.mp3
 
 # Testing & temporary scratch directories
 scratch/
