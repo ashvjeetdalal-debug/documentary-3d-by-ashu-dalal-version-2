@@ -59,6 +59,9 @@ def main():
     parser = argparse.ArgumentParser(description="Documentary 3D by Ashu Dalal (Version 2) - Studio CLI")
     parser.add_argument("--list-engines", action="store_true", help="Show all integrated engines and tool status")
     parser.add_argument("--list-styles", action="store_true", help="List all 3D styles and 100 Lemo film styles")
+    parser.add_argument("--workflow", action="store_true", help="Launch the canonical 5-Step Director Workflow")
+    parser.add_argument("--suggest-topics", action="store_true", help="Print curated documentary topics and ideas")
+    parser.add_argument("--list-gap-styles", action="store_true", help="List styles for the 3 creative engines (Lemo, p5.brush, 3D-Animator) for gap parts")
     parser.add_argument("--sync-audio", type=str, help="Path to voiceover audio file to run word-level forced alignment")
     parser.add_argument("--fetch-assets", type=str, help="Search query or comma-separated keywords to auto-fetch verified archival assets")
     parser.add_argument("--auto-intake", type=str, help="Path to voiceover audio for full auto intake: word sync + asset sourcing")
@@ -78,6 +81,22 @@ def main():
     if args.list_styles:
         list_styles()
         return
+
+    if args.suggest_topics or args.list_gap_styles or args.workflow:
+        director_script = os.path.join(DOC_SCRIPTS, "director_workflow.py")
+        if args.suggest_topics:
+            subprocess.run([sys.executable, director_script, "--suggest-topics"], check=True)
+            return
+        if args.list_gap_styles:
+            subprocess.run([sys.executable, director_script, "--list-gap-styles"], check=True)
+            return
+        if args.workflow:
+            print("\n=== DOCUMENTARY 3D BY ASHU DALAL - 5-STEP DIRECTOR WORKFLOW ===")
+            subprocess.run([sys.executable, director_script, "--suggest-topics"], check=True)
+            print("To proceed with intake and mapping:")
+            print("  python studio.py --sync-audio=<voiceover.wav>")
+            print("  python studio.py --fetch-assets='<keywords>'\n")
+            return
 
     if args.sync_audio:
         sync_script = os.path.join(DOC_SCRIPTS, "audio_sync.py")

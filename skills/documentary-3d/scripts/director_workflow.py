@@ -228,7 +228,7 @@ def main():
         topics = suggest_documentary_topics()
         print("\n=== CURATED DOCUMENTARY TOPICS ===")
         for t in topics:
-            print(f"• [{t['id']}] {t['title']}\n  {t['logline']}\n")
+            print(f"- [{t['id']}] {t['title']}\n  {t['logline']}\n")
         return
 
     if args.list_gap_styles:
