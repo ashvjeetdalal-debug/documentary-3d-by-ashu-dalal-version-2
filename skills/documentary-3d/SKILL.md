@@ -5,12 +5,14 @@ description: Master skill for Documentary 3D by Ashu Dalal Version 2. Use when t
 
 # Documentary 3D by Ashu Dalal Version 2
 
-Build narrated cinematic documentary videos entirely in code. This suite fuses **4 world-class video production engines**:
+Build narrated cinematic documentary videos entirely in code. This suite fuses **6 world-class video production engines**:
 
 1. **Ashu Dalal Evidence-Board & Vintage 2D Engine**: Pinned archival photos, red yarn/strings, wobble focus circles, typewriter labels, slammed rubber stamps, continuous camera motion, and vintage silent-film inserts.
 2. **Three.js 3D Procedural Engine (`kit/`)**: Headless Chrome frame-by-frame renderer (no Blender), 12 procedural shader looks, sub-frame motion blur, depth-of-field, and soft shadows.
 3. **p5.brush Natural Generative Media Engine (`skills/p5-brush/`)**: Procedural charcoal, watercolor bleeding, colored pencils, felt markers, architectural hatching, and vector flow fields rendered frame-by-frame.
 4. **Lemo-Opuscar Studio (100+ Styles) (`skills/lemo-opuscar/`)**: 100 curated film styles (`styles/`), core directorial guides (`guides/DIRECTOR.md`), technical execution manuals (`guides/TECHNIQUE.md`), and automated audio scoring pipelines.
+5. **WhisperX / Word-Level Speech Sync Engine (`audio_sync.py`)**: Automatic forced word-level alignment across any language (English, Hindi, Hinglish), broadcast subtitle timing (min 1.8s hold), and 1-2 frame camera trigger marks.
+6. **Automated Archival Asset Fetcher (`asset_fetcher.py`)**: Automatic discovery, download, and PIL verification of authentic historical assets from Wikimedia Commons/Wikipedia without synthetic slop.
 
 ---
 
@@ -21,11 +23,12 @@ documentary-3d-by-ashu-dalal/
 ├── plugin.json                 # Studio Edition plugin manifest
 ├── README.md                   # Full master guide & documentation
 ├── INSTALL.txt                 # Setup & dependencies guide
+├── studio.py                   # Master Unified Studio CLI
 ├── 3D-Animator-Skill.pdf       # Complete 3D animation reference manual
 ├── assets/
 │   └── logo.svg                # Master logo badge
 ├── rules/
-│   └── AGENTS.md               # Unified production & creative rules
+│   └── AGENTS.md               # Unified production & creative laws
 ├── guides/                     # Core directorial & production manuals
 │   ├── DIRECTOR.md             # Narrative rhythm, music grid, camera blocking, treatment
 │   ├── TECHNIQUE.md            # Technical rendering, audio pipelines, QA loops
@@ -46,9 +49,10 @@ documentary-3d-by-ashu-dalal/
     │   │   ├── sound.md
     │   │   └── style-guide.md
     │   └── scripts/
+    │       ├── audio_sync.py        # WhisperX / Whisper forced word-level alignment
+    │       ├── asset_fetcher.py     # Automated authentic archival asset sourcing
     │       ├── board_engine.py      # 2.5D Evidence Board renderer
     │       ├── vintage_engine.py    # Vintage silent-film 2D engine
-    │       ├── align_timing.py      # Silence detection & timing aligner
     │       ├── sound_bed.py         # Algorithmic drone & pulse synthesizer
     │       ├── mix_and_mux.py/.sh   # Sidechain ducking & -14 LUFS multiplexer
     │       ├── splice.py/.sh        # Frame-accurate video splicing
@@ -65,36 +69,36 @@ documentary-3d-by-ashu-dalal/
     │               ├── handheld.py     # Camera shake injector
     │               └── laptop_reel.py/.sh # Laptop/phone mockup reel generator
     ├── p5-brush/               # Natural Media Generative Drawing Skill
-    │   ├── SKILL.md            # Brush usage & animation guide
-    │   ├── llms.txt            # Complete API spec for code generation
-    │   ├── dist/               # Standalone and p5 production builds
-    │   ├── src/                # Full library source code
-    │   ├── examples/           # Official demo sketches
-    │   └── kit/                # Ready-to-render template (render_brush.mjs)
     └── lemo-opuscar/           # 100+ Film Styles & Studio Skill
-        ├── SKILL.md            # Production guide for styles
-        ├── core/               # Shared rendering, audio, post-processing tools
-        └── styles/             # 100 complete film style folders
 ```
 
 ---
 
-## 🎬 Master 5-Stage Production Workflow
+## 🎬 Master 6-Stage Production Workflow
 
-1. **Intake & Aesthetic Selection**:
-   - Collect voiceover / text script and archival materials.
-   - Choose visual engines: Evidence Board for paper trails; Three.js 3D for physical spaces & objects; p5.brush for natural hand-sketched maps; Lemo-Opuscar style (`dark-documentary`, `blueprint`, `archive-lighttable`) for complete aesthetic thematic coherence.
-2. **Treatment & Music Grid (`guides/DIRECTOR.md`)**:
-   - Write a `TREATMENT.md` defining the 3-act narrative arc.
-   - Lock visual events and sentence starts to a defined BPM tempo grid.
-3. **Scene Programming**:
-   - Adhere to the core law: Every frame is a pure function of time `renderAt(t)`.
-   - Use deterministic seeds (`brush.seed(42)`, `hash(n)`).
-4. **Offline Frame-by-Frame Rendering**:
-   - Use `kit/render.mjs` for Three.js 3D (sub-frame jitter `n=16` for stills, `n=48` for finals).
-   - Use `skills/p5-brush/kit/render_brush.mjs` for natural brush animations.
-   - Use `board_engine.py` for Evidence Board video.
-   - Splice scenes together seamlessly with `splice.py`.
-5. **Sound Design & Master QC**:
-   - Synthesize or mix audio cues with `sound_bed.py` and `mix.py`.
-   - Sidechain duck score under speech and master strictly to **-14 LUFS** (ceiling **-1.5 dBTP**) via `mix_and_mux.py`.
+### Stage 1: Audio Intake & Forced Word-Level Alignment (WhisperX)
+- Input voiceover audio (`.wav` or `.mp3`).
+- Run `python studio.py --sync-audio=<path>` to generate `sync_timeline.json`.
+- Outputs exact sentence intervals, word timestamps for kinetic subtitles (min 1.8s hold), and visual cue marks.
+
+### Stage 2: Automatic Archival Asset Acquisition
+- If authentic assets are not provided, run `python studio.py --fetch-assets="<topic, entities>"` to query Wikimedia Commons / Wikipedia.
+- Never generate synthetic placeholder slop. Every asset is verified for resolution, aspect ratio, and clean RGB mode.
+
+### Stage 3: Treatment & Unified Camera Choreography (`DIRECTOR.md`)
+- Lock visual actions, pushpin slams, and 3D camera transitions within **1–2 frames** of the spoken trigger words from `sync_timeline.json`.
+- Adhere to the Single Continuous Camera Grammar: One camera move = one lens, one Bezier curve, one progress parameter.
+
+### Stage 4: Scene Programming
+- Every frame must be a pure function of time `renderAt(t)`.
+- Use deterministic seeds (`brush.seed(42)`, `hash(n)`).
+
+### Stage 5: Offline Frame-by-Frame Rendering
+- Use `render.mjs` for Three.js 3D (sub-frame jitter `n=16` for inspections, `n=48` for master finals).
+- Use `render_brush.mjs` for natural media p5.brush animations.
+- Use `board_engine.py` for Evidence Board video.
+
+### Stage 6: Sound Design & Master QC
+- Synthesize tension sound beds with `sound_bed.py`.
+- Sidechain duck score under voiceover (-14 dB to -18 dB gain reduction during speech).
+- Master output normalized strictly to **-14 LUFS** with a true peak ceiling of **-1.5 dBTP** via `mix_and_mux.py`.

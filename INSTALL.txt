@@ -14,7 +14,11 @@ Quick Verification:
 Dependencies Installation:
 --------------------------
 1. Python Dependencies:
-   pip install numpy pillow opencv-python
+   pip install numpy pillow opencv-python openai-whisper torch
+
+   # Recommended for word-level forced alignment & auto asset fetching:
+   pip install whisperx
+   # (Or openai-whisper with word_timestamps=True works out-of-the-box)
 
    # Optional (for advanced voice & music tools from lemo-opuscar):
    pip install -r skills/lemo-opuscar/requirements.txt
