@@ -62,8 +62,10 @@ def list_engines():
     print(f"  3. WhisperX Speech Alignment & Mapping: {os.path.join(DOC_SCRIPTS, 'audio_sync.py')}")
     print(f"  4. Zero-Fake Internet Archival Asset Fetcher: {os.path.join(DOC_SCRIPTS, 'asset_fetcher.py')}")
     print(f"  5. Sound System (Active Mode: {sound_mode}):")
-    print(f"     - Openverse Real SFX/Music: {os.path.join(DOC_SCRIPTS, 'openverse_sfx.py')}")
+    print(f"     - Multi-Source CC Audio (Openverse+Wikimedia+Archive+Freesound): {os.path.join(DOC_SCRIPTS, 'openverse_sfx.py')}")
     print(f"     - Legacy Synth (sound_bed.py): SILENCED BY DEFAULT, preserved intact (--sound-mode=legacy_synth)")
+    print(f"  6. Real CC0/Open 3D Model Fetcher (.glb/.gltf): {os.path.join(DOC_SCRIPTS, 'model_fetcher.py')}")
+    print(f"  7. Script & Research-Driven Gap Planner (plan.md): python studio.py --plan")
 
     print("\n[GAP-ONLY FALLBACK ENGINES - USED ONLY WHEN NO REAL ASSET EXISTS]")
     styles_count = len([s for s in os.listdir(LEMO_STYLES) if os.path.isdir(os.path.join(LEMO_STYLES, s)) and not s.startswith(('_', '.'))]) if os.path.exists(LEMO_STYLES) else 0
@@ -100,6 +102,7 @@ def main():
     parser.add_argument("--lemo", type=str, default="none", help="Lemo-Opuscar style slug for --combo (e.g. dark-documentary)")
     parser.add_argument("--post", type=str, default="hdr", choices=["hdr", "gtao", "crt", "none"], help="Post-FX pass for --combo")
     parser.add_argument("--photo", type=str, default="", help="Optional /assets/... photo card with readability lock for --combo")
+    parser.add_argument("--model", type=str, default="", help="Optional downloaded .glb/.gltf 3D model path for --combo")
     parser.add_argument("--width", type=int, default=1920, help="Frame width for --combo (e.g. 1920 or 1080)")
     parser.add_argument("--height", type=int, default=1080, help="Frame height for --combo (e.g. 1080 or 1920)")
     parser.add_argument("--total", type=float, default=6.0, help="Duration in seconds for --combo")
@@ -109,12 +112,19 @@ def main():
     parser.add_argument("--handheld-csv", type=str, help="Motion CSV for real handheld camera shake pass")
     parser.add_argument("--project", type=str, default="", help="Project folder path for --combo /assets resolution")
     parser.add_argument("--workflow", action="store_true", help="Show the canonical 5-Step Director Workflow")
+    parser.add_argument("--plan", action="store_true", help="Generate research-driven plan.md mapping script & gap visuals")
+    parser.add_argument("--topic", type=str, default="Documentary Production", help="Documentary topic for --plan")
+    parser.add_argument("--script-file", type=str, default="", help="Script file path for --plan")
+    parser.add_argument("--mapping", type=str, default="", help="Step 4 project_mapping.json path for --plan")
+    parser.add_argument("--research-file", type=str, default="", help="Internet research notes file for --plan")
     parser.add_argument("--suggest-topics", action="store_true", help="Step 1: Print curated documentary topics")
     parser.add_argument("--list-gap-styles", action="store_true", help="Step 5(1): List styles for the 3 gap fallback engines")
     parser.add_argument("--sync-audio", type=str, help="Step 4: Run WhisperX / Whisper word-level alignment on audio")
     parser.add_argument("--fetch-assets", type=str, help="Step 3: Download & verify real internet/social assets (multi-source)")
-    parser.add_argument("--max", type=int, default=8, help="Max assets to download for --fetch-assets")
-    parser.add_argument("--sources", type=str, default="all", help="Sources for --fetch-assets (all or wikimedia,wikipedia,openverse,archive,loc,nasa)")
+    parser.add_argument("--fetch-models", type=str, help="Download CC0 / open 3D .glb/.gltf models via Poly Haven / --from-urls")
+    parser.add_argument("--res", type=str, default="1k", choices=["1k", "2k", "4k"], help="Resolution for --fetch-models")
+    parser.add_argument("--max", type=int, default=8, help="Max assets/models to download")
+    parser.add_argument("--sources", type=str, default="all", help="Sources for --fetch-assets or --fetch-sfx/--fetch-music")
     parser.add_argument("--from-urls", type=str, default="", help="Comma-separated direct image URLs found via full web/social research")
     parser.add_argument("--tags", type=str, default="", help="Bilingual/phonetic alias tags for --fetch-assets (for WhisperX Hindi/Hinglish sync)")
     parser.add_argument("--fetch-sfx", type=str, help="Openverse: Fetch real CC-licensed SFX (comma-separated, e.g. whoosh,paper,stamp)")
@@ -174,6 +184,8 @@ def main():
         ]
         if args.photo:
             cmd.append(f"--photo={args.photo}")
+        if args.model:
+            cmd.append(f"--model={args.model}")
         if args.project:
             cmd.append(f"--project={args.project}")
         if args.stills:
@@ -187,8 +199,19 @@ def main():
         subprocess.run(cmd, check=True)
         return
 
-    if args.suggest_topics or args.list_gap_styles or args.workflow:
+    if args.plan or args.suggest_topics or args.list_gap_styles or args.workflow:
         director_script = os.path.join(DOC_SCRIPTS, "director_workflow.py")
+        if args.plan:
+            out_plan = args.out if args.out.endswith(".md") else "plan.md"
+            cmd = [sys.executable, director_script, "--plan", "--topic", args.topic, "--out", out_plan]
+            if args.script_file:
+                cmd.extend(["--script-file", args.script_file])
+            if args.mapping:
+                cmd.extend(["--mapping", args.mapping])
+            if args.research_file:
+                cmd.extend(["--research-file", args.research_file])
+            subprocess.run(cmd, check=True)
+            return
         if args.suggest_topics:
             subprocess.run([sys.executable, director_script, "--suggest-topics"], check=True)
             return
@@ -198,20 +221,35 @@ def main():
         if args.workflow:
             print("\n=== DOCUMENTARY 3D BY ASHU DALAL - CANONICAL 5-STEP WORKFLOW ===")
             subprocess.run([sys.executable, director_script, "--suggest-topics"], check=True)
-            print("Next steps after voiceover audio intake:")
+            print("Next steps after topic + script:")
+            print("  Step 1B (Gap Plan):        python studio.py --plan --topic='<topic>' --script-file=script.txt")
             print("  Step 3 (Zero-Fake Assets): python studio.py --fetch-assets='<keywords>'")
+            print("  Step 3B (3D .glb Models):  python studio.py --fetch-models='<keywords>'")
             print("  Step 4 (WhisperX Sync):    python studio.py --sync-audio=<voiceover.wav>")
-            print("  Openverse SFX & Music:     python studio.py --fetch-sfx='whoosh,paper,stamp'\n")
+            print("  Multi-Source SFX & Music:  python studio.py --fetch-sfx='whoosh,paper,stamp'\n")
             return
+
+    if args.fetch_models:
+        model_script = os.path.join(DOC_SCRIPTS, "model_fetcher.py")
+        out_dir = args.out if not args.out.endswith(".mp4") else "models"
+        cmd = [sys.executable, model_script, "--query", args.fetch_models, "--out", out_dir, "--max", str(min(args.max, 6)), "--res", args.res]
+        if args.from_urls:
+            cmd.extend(["--from-urls", args.from_urls])
+        if args.tags:
+            cmd.extend(["--tags", args.tags])
+        subprocess.run(cmd, check=True)
+        return
 
     if args.fetch_sfx or args.fetch_music:
         ov_script = os.path.join(DOC_SCRIPTS, "openverse_sfx.py")
         out_dir = args.out if not args.out.endswith(".mp4") else "sound"
-        cmd = [sys.executable, ov_script, "--out", out_dir]
+        cmd = [sys.executable, ov_script, "--out", out_dir, "--sources", args.sources]
         if args.fetch_sfx:
             cmd.extend(["--sfx", args.fetch_sfx])
         if args.fetch_music:
             cmd.extend(["--music", args.fetch_music])
+        if args.from_urls:
+            cmd.extend(["--from-urls", args.from_urls])
         subprocess.run(cmd, check=True)
         return
 

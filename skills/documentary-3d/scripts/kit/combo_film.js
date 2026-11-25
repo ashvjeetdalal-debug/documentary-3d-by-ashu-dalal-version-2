@@ -7,6 +7,7 @@
  *   - Archival Photo Cards (userData.preserveReadable = true so photos stay crisp in all looks)
  */
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clamp, lerp, easeInOut, smooth, halton, hash } from './lib.js';
 import { setStyle, styleAt } from './styles.js';
 import { BrushTextureTarget } from './p5_brush_texture.js';
@@ -31,7 +32,16 @@ function loadTextureAsync(url) {
   });
 }
 
-export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMode, photoUrl, totalSec }) {
+async function loadModelAsync(url) {
+  try {
+    return await new GLTFLoader().loadAsync(url);
+  } catch (e) {
+    console.warn('[combo_film] GLTF/GLB load failed:', url, e?.message || e);
+    return null;
+  }
+}
+
+export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMode, photoUrl, modelUrl, totalSec }) {
   const stageCanvas = document.getElementById('stage');
   // Keep stageCanvas free for 2D blitting whenever HDR accumulation or CRT WebGL2 post owns stageCanvas
   const useOffscreenGl = (postMode === 'crt' || postMode === 'hdr' || postMode === 'none');
@@ -132,6 +142,45 @@ export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMo
   ringMesh.castShadow = true;
   heroGroup.add(ringMesh);
 
+  // Optional Downloaded Real 3D Model (.glb / .gltf via --model) replacing default procedural core
+  let gltfMixer = null;
+  let gltfHolder = null;
+  if (modelUrl) {
+    const normModel = (modelUrl.startsWith('/') || modelUrl.startsWith('http')) ? modelUrl : '/' + modelUrl;
+    const gltf = await loadModelAsync(normModel);
+    if (gltf && gltf.scene) {
+      coreObj.visible = false;
+      ringMesh.visible = false;
+      const mdl = gltf.scene;
+      mdl.traverse((o) => {
+        if (o.isMesh) {
+          o.castShadow = true;
+          o.receiveShadow = true;
+        }
+      });
+      const b = new THREE.Box3().setFromObject(mdl);
+      const sz = b.getSize(new THREE.Vector3());
+      const maxDim = Math.max(sz.x, sz.y, sz.z, 0.001);
+      const scale = 0.72 / maxDim;
+      mdl.scale.multiplyScalar(scale);
+      mdl.updateMatrixWorld(true);
+      const bScaled = new THREE.Box3().setFromObject(mdl);
+      const cScaled = bScaled.getCenter(new THREE.Vector3());
+      mdl.position.set(-cScaled.x, 0.08 - bScaled.min.y, -cScaled.z);
+
+      gltfHolder = new THREE.Group();
+      gltfHolder.name = 'downloaded_model';
+      gltfHolder.add(mdl);
+      heroGroup.add(gltfHolder);
+
+      if (gltf.animations && gltf.animations.length) {
+        gltfMixer = new THREE.AnimationMixer(mdl);
+        const clip = gltf.animations[0];
+        gltfMixer.clipAction(clip).play();
+      }
+    }
+  }
+
   // Optional Readability-Protected Archival Evidence Card (if --photo supplied)
   if (photoUrl) {
     const normPhoto = (photoUrl.startsWith('/') || photoUrl.startsWith('http')) ? photoUrl : '/' + photoUrl;
@@ -207,11 +256,16 @@ export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMo
     const e = easeInOut(p);
 
     // Deterministic Hero Animation
-    coreObj.rotation.y = tSub * 0.65;
-    coreObj.rotation.x = Math.sin(tSub * 0.4) * 0.25;
-    coreObj.position.y = 0.42 + Math.sin(tSub * 1.4) * 0.03;
-    ringMesh.rotation.x = Math.PI * 0.35 + tSub * 0.5;
-    ringMesh.rotation.y = -tSub * 0.4;
+    if (gltfHolder) {
+      gltfHolder.rotation.y = tSub * 0.45;
+      if (gltfMixer) gltfMixer.setTime(tSub);
+    } else {
+      coreObj.rotation.y = tSub * 0.65;
+      coreObj.rotation.x = Math.sin(tSub * 0.4) * 0.25;
+      coreObj.position.y = 0.42 + Math.sin(tSub * 1.4) * 0.03;
+      ringMesh.rotation.x = Math.PI * 0.35 + tSub * 0.5;
+      ringMesh.rotation.y = -tSub * 0.4;
+    }
 
     const activeStyle = styleAt(styleTimeline, tSub, 'lit');
     if (brushTarget) {

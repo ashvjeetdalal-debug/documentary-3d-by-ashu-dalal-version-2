@@ -56,11 +56,13 @@ const puppeteer = puppeteerMod.default || puppeteerMod;
 
 const projectRoot = args.project ? path.resolve(String(args.project)) : process.cwd();
 const explicitPhotoPath = args.photo && fs.existsSync(path.resolve(String(args.photo))) ? path.resolve(String(args.photo)) : null;
+const explicitModelPath = args.model && fs.existsSync(path.resolve(String(args.model))) ? path.resolve(String(args.model)) : null;
 const MIME = {
   '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript',
   '.json': 'application/json', '.md': 'text/plain', '.png': 'image/png',
-  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.css': 'text/css',
-  '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.glb': 'model/gltf-binary'
+  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.css': 'text/css',
+  '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.glb': 'model/gltf-binary',
+  '.gltf': 'model/gltf+json', '.bin': 'application/octet-stream'
 };
 
 const server = http.createServer((reqHttp, res) => {
@@ -75,13 +77,16 @@ const server = http.createServer((reqHttp, res) => {
   if (urlPath === '/local-photo' && explicitPhotoPath) {
     allowedBase = path.dirname(explicitPhotoPath);
     fsPath = explicitPhotoPath;
+  } else if (urlPath.startsWith('/local-model/') && explicitModelPath) {
+    allowedBase = path.dirname(explicitModelPath);
+    fsPath = path.join(allowedBase, urlPath.slice('/local-model/'.length));
   } else if (urlPath.startsWith('/three/')) {
     allowedBase = threeDir;
     fsPath = path.join(threeDir, urlPath.slice('/three/'.length));
   } else if (urlPath.startsWith('/plugin/')) {
     allowedBase = PLUGIN_ROOT;
     fsPath = path.join(PLUGIN_ROOT, urlPath.slice('/plugin/'.length));
-  } else if (urlPath.startsWith('/assets/')) {
+  } else if (urlPath.startsWith('/assets/') || urlPath.startsWith('/models/')) {
     allowedBase = projectRoot;
     fsPath = path.join(projectRoot, urlPath.slice(1));
   } else {
@@ -152,6 +157,7 @@ const qs = new URLSearchParams({
   total: String(args.total || '6')
 });
 if (args.photo) qs.set('photo', explicitPhotoPath ? '/local-photo' : String(args.photo));
+if (args.model) qs.set('model', explicitModelPath ? '/local-model/' + encodeURIComponent(path.basename(explicitModelPath)) : String(args.model));
 
 await page.goto(`http://127.0.0.1:${port}/combo_stage.html?${qs.toString()}`, { waitUntil: 'load' });
 await page.waitForFunction('window.__ready === true', { timeout: 120000 });

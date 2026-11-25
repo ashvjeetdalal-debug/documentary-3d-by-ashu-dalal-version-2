@@ -74,6 +74,13 @@ python studio.py --list-combos
 # Combo test stills (fast check --n=4):
 python studio.py --combo --shader=paper --brush=watercolor --lemo=dark-documentary --post=gtao --stills=1.5,3.5
 
+# Downloaded real CC0 3D Model (.glb/.gltf) + Shader + Lemo + Brush combo:
+python studio.py --fetch-models="camera,desk" --out=models --max=2
+python studio.py --combo --shader=blueprint --model=models/Camera_01/Camera_01_1k.gltf --brush=flow_field --post=gtao --stills=2.0
+
+# Script-aware research & gap plan.md generation:
+python studio.py --plan --topic="Stuxnet" --script-file=script.txt --out=plan.md
+
 # Live mid-shot WhisperX-synced look morphing (9:16 vertical):
 python studio.py --combo --shader=0:lit,2.5:blueprint,4.5:synth --brush=hatching --width=1080 --height=1920 --video --out=out/morph_reel.mp4
 

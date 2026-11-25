@@ -200,6 +200,124 @@ def execute_step4_audio_mapping_and_gaps(audio_path: str, assets_manifest: List[
     return result
 
 # -------------------------------------------------------------
+# SCRIPT-AWARE plan.md GENERATOR & RESEARCH-DRIVEN GAP PLANNER
+# -------------------------------------------------------------
+def _infer_gap_recommendation(text: str) -> Dict[str, Any]:
+    """Heuristically suggest initial engine/combo/3D-model directions for a gap sentence (to refine via internet research)."""
+    low = text.lower()
+    if any(k in low for k in ("hack", "code", "cyber", "virus", "worm", "network", "server", "data", "scan", "radar", "gps", "signal", "satellite")):
+        return {
+            "engines": "3D-Animator (`blueprint`/`thermal` + `styleAt` morph) + Lemo (`lidar-survey` / `hologram-hud` / `circuit-board`)",
+            "combo": "--shader=0:lit,1.5:blueprint --brush=flow_field --lemo=dark-documentary --post=hdr",
+            "needs_3d_model": "Optional server/satellite/hardware .glb if physical hardware is mentioned",
+            "sfx": "whoosh, typing, glitch, click"
+        }
+    if any(k in low for k in ("centrifuge", "engine", "turbine", "aircraft", "plane", "rocket", "submarine", "weapon", "machine", "camera", "device", "factory", "reactor")):
+        return {
+            "engines": "code-3d-video / 3D-Animator (`--model=<slug>.glb` + `teardown`/`blueprint`) + Lemo (`precise-mechanism` / `assembly-line-diagram`)",
+            "combo": "--shader=paper --model=models/<slug>/<file>.gltf --lemo=blueprint --post=gtao",
+            "needs_3d_model": "RECOMMENDED: Fetch real CC0 .glb/.gltf via `model_fetcher.py --query='<subject>'` or `--from-urls`",
+            "sfx": "thud, click, riser"
+        }
+    if any(k in low for k in ("war", "secret", "plan", "letter", "spy", "intelligence", "history", "19", "century", "treaty", "assassination", "murder", "escape")):
+        return {
+            "engines": "p5.brush (`charcoal` / `watercolor` / `hatching`) + Lemo (`halftone-dossier` / `vintage-collage` / `comic-history` / `silent-film`)",
+            "combo": "--shader=paper --brush=charcoal --lemo=halftone-dossier --post=gtao",
+            "needs_3d_model": "Optional vintage prop .glb (desk/lantern/radio) via Poly Haven CC0",
+            "sfx": "paper, stamp, thud, whoosh"
+        }
+    return {
+        "engines": "Lemo-Opuscar (`dark-documentary` / `briefing-board`) + p5.brush (`watercolor` / `flow_field`) or `--combo`",
+        "combo": "--shader=paper --brush=watercolor --lemo=dark-documentary --post=gtao",
+        "needs_3d_model": "Decide after internet visual research (use `model_fetcher.py` if concrete 3D object helps clarity)",
+        "sfx": "whoosh, click, riser"
+    }
+
+
+def generate_plan_md(
+    out_path: str = "plan.md",
+    topic: str = "Untitled Documentary",
+    script_text: str = "",
+    mapping: Dict[str, Any] = None,
+    research_notes: str = "",
+    assets_manifest: List[Dict[str, Any]] = None,
+    models_manifest: List[Dict[str, Any]] = None,
+) -> str:
+    """
+    Create a structured, research-driven `plan.md` mapping every spoken line:
+      - Asset-backed narration -> Primary Ashu-Dalal Evidence Board / code-3d-video
+      - Empty Gaps ('khali parts') -> What is spoken, Mandatory Internet Visual Research brief,
+        Engine + Style + --combo blueprint, and downloadable .glb/.gltf 3D model plan.
+    """
+    assets_manifest = assets_manifest or []
+    models_manifest = models_manifest or []
+    lines = [
+        f"# Documentary Production & Gap Visual Plan (`plan.md`) — {topic}\n",
+        "> **System Law:** Real archival asset sections use the **Primary Ashu-Dalal Backbone (`board_engine.py` / `code-3d-video`)**.",
+        "> **Gap Law:** For every no-asset *khali* part, AI **MUST research on the internet** (mechanics, real architecture, historical visual references, documentary staging) and update this plan BEFORE generating animations or choosing final styles.\n",
+        "---",
+        "\n## 1. Timeline Overview & Asset Coverage\n",
+    ]
+
+    gaps = []
+    if mapping and mapping.get("mapped_timeline"):
+        lines.append("| # | Time | Spoken Line | Mode / Role | Matched Asset |")
+        lines.append("|---|---|---|---|---|")
+        for idx, item in enumerate(mapping["mapped_timeline"], 1):
+            t_range = f"`{item['start']:.1f}s - {item['end']:.1f}s`"
+            role = "**Primary Backbone** (Archival)" if item.get("has_archival_asset") else "**GAP — Research & Custom Visual**"
+            asset = item.get("asset") or "*(none — gap)*"
+            safe_txt = str(item.get("text", "")).replace("|", "/")
+            lines.append(f"| {idx} | {t_range} | {safe_txt} | {role} | {asset} |")
+            if not item.get("has_archival_asset"):
+                gaps.append(item)
+    else:
+        sents = [s.strip() for s in re.split(r"(?<=[.!?।])\s+|\n+", script_text.strip()) if s.strip()]
+        lines.append("| # | Beat (Est.) | Spoken Script Sentence | Status / Next Check |")
+        lines.append("|---|---|---|---|")
+        for idx, sent in enumerate(sents, 1):
+            safe_txt = sent.replace("|", "/")
+            lines.append(f"| {idx} | Sentence {idx} | {safe_txt} | Verify archival match in Step 3–4; treat as Gap if none found |")
+            gaps.append({"start": (idx - 1) * 4.0, "end": idx * 4.0, "text": sent})
+
+    sec_num = 2
+    if research_notes:
+        lines.append(f"\n---\n\n## {sec_num}. Internet & Social Media Research Summary\n")
+        lines.append(research_notes.strip())
+        sec_num += 1
+
+    lines.append(f"\n---\n\n## {sec_num}. Gap Segments — Internet-Researched Visual Design & Engine Plan\n")
+    sec_num += 1
+    if not gaps:
+        lines.append("*No empty gaps detected — 100% of spoken narration is backed by verified archival assets (use Primary Backbone).*")
+    else:
+        for i, g in enumerate(gaps, 1):
+            txt = g.get("text", "").strip()
+            rec = _infer_gap_recommendation(txt)
+            ts_label = f"{g['start']:.1f}s - {g['end']:.1f}s" if "start" in g and "end" in g else f"Segment {i}"
+            lines.append(f"### Gap {i}: [{ts_label}]")
+            lines.append(f"- **Kya Bola Ja Raha Hai (Spoken Narration):** *\"{txt}\"*")
+            lines.append("- **Internet Visual Research Checklist (AI Fill-In Before Build):**")
+            lines.append("  - [ ] Search real-world mechanics / architecture / geography / historical look behind this sentence.")
+            lines.append("  - [ ] Decide exact hero composition, animated metaphor, camera move, and 1–2 frame WhisperX trigger word.")
+            lines.append(f"- **Suggested Engines & Styles:** {rec['engines']}")
+            lines.append(f"- **Ready `--combo` Recipe:** `python studio.py --combo {rec['combo']} --stills=1.5,3.0`")
+            lines.append(f"- **3D Model Plan (`.glb` / `.gltf`):** {rec['needs_3d_model']}")
+            lines.append(f"- **Sound Cues (Multi-Source Openverse+Archive+Wikimedia):** `{rec['sfx']}`\n")
+
+    if models_manifest:
+        lines.append(f"\n---\n\n## {sec_num}. Verified Downloaded 3D Models (`models_manifest.json`)\n")
+        for m in models_manifest:
+            lines.append(f"- `{m.get('id')}` ({m.get('format')}, license: `{m.get('license')}`) -> `{m.get('file')}`")
+
+    content = "\n".join(lines) + "\n"
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(content)
+    print(f"[PLAN] Generated research & gap visual blueprint -> {out_path} ({len(gaps)} gap segment(s))")
+    return out_path
+
+
+# -------------------------------------------------------------
 # STEP 5 & 5(1): INTERACTIVE VISUAL SELECTION CONSULTATION
 # -------------------------------------------------------------
 def format_step5_consultation_prompt(gap_segments: List[Dict[str, Any]]) -> str:
@@ -240,7 +358,13 @@ def main():
     parser = argparse.ArgumentParser(description="Unified 5-Step Director Workflow Engine")
     parser.add_argument("--suggest-topics", action="store_true", help="Print curated documentary topics")
     parser.add_argument("--list-gap-styles", action="store_true", help="Print all styles across the 3 engines for Step 5(1)")
-    parser.add_argument("--run-intake", nargs=2, metavar=("AUDIO_PATH", "TOPIC_KEYWORDS"), help="Execute Steps 3 & 4: Audio intake, asset fetch, and gap detection")
+    parser.add_argument("--run-intake", nargs=2, metavar=("AUDIO_PATH", "TOPIC_KEYWORDS"), help="Execute Steps 3 & 4: Audio intake, asset fetch, mapping, and plan.md generation")
+    parser.add_argument("--plan", action="store_true", help="Generate script-aware & research-ready plan.md for topic/script or mapping JSON")
+    parser.add_argument("--topic", type=str, default="Documentary Production", help="Topic title for --plan")
+    parser.add_argument("--script-file", type=str, default="", help="Path to narration script text file for early --plan")
+    parser.add_argument("--mapping", type=str, default="", help="Optional project_mapping.json from Step 4 for timestamped --plan")
+    parser.add_argument("--research-file", type=str, default="", help="Optional markdown/text file with Step 1 internet research notes")
+    parser.add_argument("--out", type=str, default="plan.md", help="Output plan path (default: plan.md)")
     args = parser.parse_args()
 
     if args.suggest_topics:
@@ -266,11 +390,23 @@ def main():
         print("\n")
         return
 
+    if args.plan:
+        script_txt = open(args.script_file, encoding="utf-8").read() if args.script_file and os.path.exists(args.script_file) else ""
+        mapping_obj = json.load(open(args.mapping, encoding="utf-8")) if args.mapping and os.path.exists(args.mapping) else None
+        research_txt = open(args.research_file, encoding="utf-8").read() if args.research_file and os.path.exists(args.research_file) else ""
+        models_obj = json.load(open("models/models_manifest.json", encoding="utf-8")) if os.path.exists("models/models_manifest.json") else []
+        generate_plan_md(
+            out_path=args.out, topic=args.topic, script_text=script_txt,
+            mapping=mapping_obj, research_notes=research_txt, models_manifest=models_obj
+        )
+        return
+
     if args.run_intake:
         audio_file, keywords = args.run_intake
         assets_dir = "assets"
         assets = execute_step3_asset_sourcing(keywords.split(","), assets_dir)
         mapping = execute_step4_audio_mapping_and_gaps(audio_file, assets, "project_mapping.json")
+        generate_plan_md(out_path=args.out, topic=keywords, mapping=mapping, assets_manifest=assets)
         prompt = format_step5_consultation_prompt(mapping["gap_segments"])
         print("\n" + prompt)
 

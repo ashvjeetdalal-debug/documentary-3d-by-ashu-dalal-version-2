@@ -24,29 +24,26 @@ Build narrated cinematic documentary videos in code, preserving the **original A
 
 ## 🎬 Canonical 5-Step Director Workflow
 
-### Step 1: Full Internet + Social Media Research, Topic & Script
+### Step 1: Full Internet + Social Media Research, Topic, Script & Initial `plan.md`
 - Present strong documentary topic ideas on historical events, covert operations, technology, or people.
 - **Full Research Rule**: Before writing the script on the chosen topic, search across **all internet sources** (news outlets, official/declassified archives, Wikipedia, academic/research sites) **AND social media platforms** (Reddit, X/Twitter, YouTube discussions, Instagram/TikTok angles, technical forums) to gather verified facts, human angles, and visual leads. Then write a tightly paced documentary script (150 wpm, one visual per sentence, hook in first 3s).
+- **Automatic `plan.md` Generation**: Immediately after writing the script, generate **`plan.md`** via [`director_workflow.py`](scripts/director_workflow.py) (`python studio.py --plan --topic=... --script-file=...`). Map out what is spoken in potential gap sections, research the real-world visuals on the **internet**, decide whether downloadable **3D `.glb`/`.gltf` models** ([`model_fetcher.py`](scripts/model_fetcher.py)) are needed, and pick the best engines/styles.
 
 ### Step 2: Voiceover Audio Intake
 - Ask the operator for the voiceover audio file (`.wav`/`.mp3`), or offer to generate the voiceover. Receive audio before building scenes.
 
-### Step 3: Multi-Source Original Internet & Social Asset Sourcing (NO FAKE ASSETS)
-- If assets are not provided, **immediately upon receiving audio**, fetch real historical photos, maps, diagrams, documents, and authentic social/news media stills using [`asset_fetcher.py`](scripts/asset_fetcher.py) (Wikimedia Commons, Wikipedia, Openverse Images, Internet Archive, Library of Congress, NASA Images, plus `--from-urls` for verified URLs found during Step 1 web/social research).
+### Step 3: Multi-Source Real Assets & CC0 3D Models (NO FAKE ASSETS)
+- If assets are not provided, **immediately upon receiving audio**, fetch real historical photos, maps, diagrams, documents, and authentic social/news media stills using [`asset_fetcher.py`](scripts/asset_fetcher.py) (Wikimedia Commons, Wikipedia, Openverse Images, Internet Archive, NASA Images, plus `--from-urls` for verified URLs found during Step 1 web/social research).
 - Verify every downloaded asset with PIL (min 400×300, non-corrupt, clean RGB). **NO fake assets, NO synthetic cartoon slop, NO fabricated news logos.** Pass `--tags` with bilingual/phonetic aliases if voiceover is Hindi/Hinglish.
+- For gap scenes requiring real 3D props/machinery/architecture, download CC0/open **`.glb`/`.gltf` 3D models** via [`model_fetcher.py`](scripts/model_fetcher.py) (`studio.py --fetch-models="<query>"` via Poly Haven 3D API or `--from-urls` from NASA 3D / Smithsonian / Sketchfab CC0).
 
-### Step 4: WhisperX Word-Level Alignment, Asset Mapping & Gap Detection
+### Step 4: WhisperX Word-Level Alignment, Asset Mapping, Gap Detection & Final `plan.md`
 - Execute [`audio_sync.py`](scripts/audio_sync.py) using **WhisperX** (`whisperx` primary, `faster-whisper` & `openai-whisper` fallbacks) to align every spoken word to exact millisecond timestamps.
 - Map each verified archival asset to the exact words/sentences where it belongs.
-- Identify empty segments where **no archival asset exists** (`gap_segments` via [`director_workflow.py`](scripts/director_workflow.py)).
+- Identify empty segments where **no archival asset exists** (`gap_segments` via [`director_workflow.py`](scripts/director_workflow.py)), and update **`plan.md`** (`python studio.py --plan --mapping=project_mapping.json`) with exact timestamps, internet-researched visual designs, 3D model paths, and engine/combo plans.
 
-### Step 5 & Substep 5(1): Interactive Consultation for No-Asset Gaps
-- For the empty *"khali"* segments lacking archival photos, ask the operator which visual engine and style to design with:
-  1. **Lemo-Opuscar Studio** (`skills/lemo-opuscar/styles/`, 99 film styles)
-  2. **p5.brush** (`skills/p5-brush/`, charcoal, watercolor, pencils, cross-hatching, markers, flow fields)
-  3. **3D-Animator / Three.js** (`scripts/kit/` 12 shader looks: `lit`, `clay`, `blueprint`, `paper`, `shadow`, `toon`, `synth`, `chrome`, `voxel`, `thermal`, `neon`, `mix`)
-  4. **Combined Hybrid Mode** (`studio.py --combo` — see `../../guides/COMBINATIONS.md`) + optional `vintage_engine.py`
-- Always share the recommended style list alongside the options. **If the operator asks for more styles, provide additional styles from `skills/documentary-3d/references/film-styles-catalog.md` / `skills/lemo-opuscar/styles/`.**
+### Step 5 & Substep 5(1): Researched Gap Visual Consultation (`plan.md` Proposal)
+- For the empty *"khali"* segments lacking archival photos, research the real subject/metaphor on the internet first, present the **`plan.md` design proposal** alongside the **Fallback Visual Engines** (`Lemo-Opuscar` 99 styles, `p5.brush`, `3D-Animator` 12 shaders, or `studio.py --combo --model=...`), and ask the operator to approve or refine the chosen style/design before rendering. Always offer more styles when requested.
 
 ---
 
@@ -69,10 +66,11 @@ Read [`references/style-guide.md`](references/style-guide.md) before planning sh
 |---|---|
 | `board_engine.py` | **Primary Engine**: Continuous-camera Evidence Board renderer (pinned cards, tags, red strings, circles, stamps, grain, vignette). |
 | `code-3d-video` (`../code-3d-video/`) | **Primary 3D Engine**: Restored original 3D video kit (`builders.js`, `character.js`, `looks.js`, `stage.js`, `qa.mjs`, `lint.mjs`, `doctor.mjs`). Always auto-initialize new project folders with `python studio.py --init-3d <dir>` (`npm run setup` + `npm run doctor`). |
-| `asset_fetcher.py` | Step 3: Downloads & PIL-verifies real historical assets from Wikimedia Commons / Wikipedia (zero fake assets). |
-| `audio_sync.py` | Step 4: Runs WhisperX (fallback: OpenAI Whisper) word-level alignment & subtitle sync. |
-| `director_workflow.py` | Step 4–5(1): Maps verified assets to transcript, detects empty gaps, presents 3 gap engines + style catalogs. |
-| `openverse_sfx.py` | **Active Sound Engine**: Queries, downloads & normalizes real CC-licensed SFX & ambient music from Openverse API (`https://api.openverse.org/v1/audio/`). |
+| `asset_fetcher.py` | Step 3: Multi-source PIL-verified archival images (Wikimedia, Wikipedia, Openverse, Archive, NASA, `--from-urls`). |
+| `model_fetcher.py` | Step 3B: Downloads & validates real CC0/open 3D `.glb`/`.gltf` models (Poly Haven API + direct `--from-urls`). |
+| `audio_sync.py` | Step 4: Runs WhisperX (`faster-whisper` / `openai-whisper` fallbacks) word-level alignment & subtitle sync. |
+| `director_workflow.py` | Step 1B–5(1): Generates `plan.md`, maps assets to transcript, detects empty gaps, presents researched visual options. |
+| `openverse_sfx.py` | **Active Sound Engine**: Multi-source real CC/PD SFX & music (Openverse, Wikimedia Audio, Archive Audio, Freesound v2 API, `--from-urls`). |
 | `sound_config.json` | Controls active sound mode (`"openverse"` default vs `"legacy_synth"`). |
 | `sound_bed.py` | **Silenced Legacy Fallback (Preserved Intact)**: Original synthesized sound bed. Dormant unless `SOUND_ENGINE=legacy_synth` or `--force-legacy`. |
 | `vintage_engine.py` | Legacy silent-film 2D insert engine (optional gap insert). |
