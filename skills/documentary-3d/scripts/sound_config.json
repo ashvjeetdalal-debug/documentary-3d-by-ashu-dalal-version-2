@@ -1,0 +1,10 @@
+{
+  "active_engine": "openverse",
+  "available_engines": [
+    "openverse",
+    "legacy_synth"
+  ],
+  "legacy_note": "Legacy synthesized sound (sound_bed.py and code-3d-video gen_sfx.py) is preserved intact but SILENCED by default. Set active_engine to 'legacy_synth' (or pass --force-legacy) to revert anytime.",
+  "openverse_api_base": "https://api.openverse.org/v1/audio/",
+  "preferred_licenses": "cc0,pdm,by"
+}

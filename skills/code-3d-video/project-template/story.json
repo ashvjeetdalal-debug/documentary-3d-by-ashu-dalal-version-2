@@ -1,0 +1,25 @@
+{
+  "title": "The Lamp on Maple Street (demo)",
+  "engine": "three", "look": "noir",
+  "width": 1080, "height": 1920, "fps": 30, "seed": 11,
+  "script": "Every night at nine, the lamp on Maple Street flickers. Nobody ever asks why. Tonight, a kid with a flashlight decides to find out. And what he finds behind the lamp changes the whole street.",
+  "voice": "audio/voice.wav",
+  "words": "words.json",
+  "speaker": "kid",
+  "camera": [
+    { "t": 0.0,  "pos": [2.4, 1.7, -3.0],   "look": [0.6, 1.2, -10.0], "fov": 46 },
+    { "t": 4.0,  "pos": [1.8, 1.5, -11.0],  "look": [0.6, 1.2, -17.0], "fov": 44 },
+    { "t": 8.0,  "pos": [1.1, 1.35, -20.0], "look": [0.4, 1.1, -26.0], "fov": 40 },
+    { "t": 12.0, "pos": [0.4, 1.25, -29.5], "look": [-0.8, 1.2, -36.0], "fov": 38 },
+    { "t": 14.5, "pos": [-0.1, 1.15, -32.5], "look": [-0.8, 1.0, -37.5], "fov": 34 }
+  ],
+  "labels": [ { "t0": 0.4, "t1": 3.2, "text": "Maple Street · 9:00 PM" } ],
+  "sfx": [
+    { "t": 0.3, "kind": "whoosh", "gain": 0.6 },
+    { "t": 3.4, "kind": "click" },
+    { "t": 5.0, "kind": "footstep" }, { "t": 5.45, "kind": "footstep" }, { "t": 5.9, "kind": "footstep" },
+    { "t": 9.5, "kind": "riser", "gain": 0.7 },
+    { "t": 11.7, "kind": "boom", "gain": 0.9 }
+  ],
+  "music": { "kind": "pad", "mood": "dark", "gain": 0.28 }
+}

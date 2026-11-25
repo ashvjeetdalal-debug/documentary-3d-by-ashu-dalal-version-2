@@ -1,14 +1,14 @@
 {
   "name": "documentary-3d-by-ashu-dalal-version-2",
   "displayName": "Documentary 3D by Ashu Dalal Version 2",
-  "version": "2.0.0",
-  "description": "The ultimate code-driven cinematic video production suite by Ashu Dalal (Version 2). Combines: (1) 2.5D Evidence Board & Vintage 2D Silent-Film engines, (2) Three.js 3D Procedural Engine (12 styles + camera physics), (3) p5.brush Natural Generative Media Engine (pencils, watercolor, charcoal, hatching, flow fields), and (4) Lemo-Opuscar Studio (100+ cinematic styles, Director/Technique guides, and automated scoring).",
+  "version": "2.1.0",
+  "description": "Master code-driven documentary suite by Ashu Dalal. Uses the restored Ashu-Dalal Evidence-Board & Code-3D-Video Documentary backbone as the primary engine, WhisperX for word-level alignment, verified real internet archival assets (zero fake assets), Openverse API for real SFX & music beds (legacy synth silenced but preserved), and p5.brush / lemo-opuscar / 3D-animator exclusively for missing-asset gap segments.",
   "logo": "assets/logo.svg",
   "suggestedPrompts": [
-    "Make an Ashu Dalal style documentary video with 3D procedural scenes and evidence board",
-    "Create a cinematic 3D scene in clay or blueprint style with realistic handheld camera shake",
-    "Draw an animated watercolor and charcoal historical map using p5.brush",
-    "Direct a short cinematic explainer using one of the 100 Lemo-Opuscar film styles",
-    "Produce a full documentary with voiceover, ducked audio bed, and 9:16 social media reel"
+    "Start the 5-step Ashu Dalal documentary workflow for a new historical topic",
+    "Sync my voiceover with WhisperX, download verified internet archival assets, and identify no-asset gaps",
+    "Fill no-asset gap segments using p5.brush, Lemo-Opuscar, or 3D-Animator with my chosen style",
+    "Fetch real CC-licensed SFX and ambient music from Openverse and mix at -14 LUFS",
+    "Build a continuous-camera Evidence Board documentary with contact-sheet QA and 9:16 export"
   ]
 }

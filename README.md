@@ -104,10 +104,10 @@ Switch styles on the fly via query parameter or flag (`--style=<name>`):
 - Camera blocking without static monotony.
 - Minimum 1.8-second subtitle duration rules.
 
-### 4. Broadcast Audio Engineering
-- Procedural tension drones and pulses (`sound_bed.py`).
-- Automatic sidechain ducking of background music under speech.
-- Master normalization strictly calibrated to **-14 LUFS** and **-1.5 dBTP** (EBU R128).
+### 4. Broadcast Audio Engineering (Openverse Default)
+- **Active Default (`openverse_sfx.py`)**: Real CC-licensed SFX (`whoosh`, `paper`, `stamp`, `typing`, `thud`) and ambient music beds fetched from the **WordPress Openverse Audio API** (`https://api.openverse.org/v1/audio/`), normalized to `48 kHz` WAV and logged to `openverse_attribution.json`.
+- **Silenced Legacy Fallback (`sound_bed.py`, `gen_sfx.py`)**: Preserved intact inside the plugin but **silenced by default** via `sound_config.json` (`"active_engine": "openverse"`). Switchable anytime via `python studio.py --sound-mode=legacy_synth`.
+- Automatic sidechain ducking of background music under speech and master normalization strictly calibrated to **-14 LUFS** and **-1.5 dBTP** (EBU R128).
 
 ---
 

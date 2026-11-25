@@ -1,10 +1,35 @@
 """Kaz Documentary sound bed: dark drone + pulse + SFX, synthesized (no downloads).
-Usage: python3 sound_bed.py cues.json out.wav
-cues.json = {"duration": 92.6, "whoosh": [..s], "type": [[start_s, n_chars], ...],
-             "thud": [..s], "shot": [..s], "scratch": [[start_s, dur_s], ...],
-             "tension": [..s peaks], "film": [[start_s, end_s], ...], "engine": [[start_s, end_s], ...]}"""
-import numpy as np, wave, json, sys
-c = json.load(open(sys.argv[1])); sr = 48000; D = c["duration"]; n = int(sr*D); t = np.arange(n)/sr
+NOTE: SILENCED BY DEFAULT in Version 2.1 in favor of Openverse real SFX & music (openverse_sfx.py).
+All original synthesis code is preserved intact below. To re-enable anytime:
+  - Set "active_engine": "legacy_synth" in sound_config.json, OR
+  - Set environment variable ASHU_SOUND_ENGINE=legacy_synth, OR
+  - Pass --force-legacy flag: python sound_bed.py cues.json out.wav --force-legacy
+Usage: python3 sound_bed.py cues.json out.wav [--force-legacy]"""
+import numpy as np, wave, json, sys, os
+
+def _is_legacy_enabled():
+    if "--force-legacy" in sys.argv:
+        return True
+    env = os.environ.get("ASHU_SOUND_ENGINE", "").strip().lower()
+    if env:
+        return env == "legacy_synth"
+    cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sound_config.json")
+    if os.path.exists(cfg_path):
+        try:
+            return json.load(open(cfg_path, encoding="utf-8")).get("active_engine") == "legacy_synth"
+        except Exception:
+            pass
+    return False
+
+c = json.load(open(sys.argv[1])); sr = 48000; D = c["duration"]; n = int(sr*D)
+
+if not _is_legacy_enabled():
+    print("[sound_bed.py] Legacy synthetic sound is SILENCED by default (Openverse is active). Writing silent track; pass --force-legacy or switch sound_config.json to 'legacy_synth' to re-enable.")
+    w = wave.open(sys.argv[2], "wb"); w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr)
+    w.writeframes(np.zeros(n, dtype=np.int16).tobytes()); w.close()
+    sys.exit(0)
+
+t = np.arange(n)/sr
 rng = np.random.default_rng(3)
 pad = sum(a*np.sin(2*np.pi*f*t+np.sin(2*np.pi*.07*t)*2) for f, a in [(55,1),(65.4,.6),(82.4,.5),(110,.35),(130.8,.2)])
 pad *= (.5+.5*np.sin(2*np.pi*t/23)**2)*np.clip(t/3,0,1)*np.clip((D-t)/2.5,0,1)

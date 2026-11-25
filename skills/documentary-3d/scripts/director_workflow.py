@@ -153,7 +153,8 @@ def execute_step4_audio_mapping_and_gaps(audio_path: str, assets_manifest: List[
             "end": seg["end"],
             "text": seg["text"],
             "asset": matched_asset["filename"] if matched_asset else None,
-            "has_archival_asset": matched_asset is not None
+            "has_archival_asset": matched_asset is not None,
+            "engine_role": "main_ashu_dalal_documentary" if matched_asset else "gap_engine_pending_user_choice"
         })
         if matched_asset:
             occupied_intervals.append((seg["start"], seg["end"]))
@@ -172,6 +173,9 @@ def execute_step4_audio_mapping_and_gaps(audio_path: str, assets_manifest: List[
     result = {
         "audio_file": audio_path,
         "duration": total_dur,
+        "alignment_engine": timeline.get("engine", "whisper"),
+        "sound_engine_default": "openverse",
+        "words": timeline.get("words", []),
         "mapped_timeline": mapped_timeline,
         "gap_segments": gap_segments,
         "total_gaps_count": len(gap_segments)
@@ -180,8 +184,8 @@ def execute_step4_audio_mapping_and_gaps(audio_path: str, assets_manifest: List[
     with open(out_json, "w", encoding="utf-8") as f:
         json.dump(result, f, indent=2, ensure_ascii=False)
 
-    print(f"\n[MAPPING COMPLETE] Duration: {total_dur:.2f}s")
-    print(f"Total Sentences: {len(mapped_timeline)} | Asset-Backed: {len(mapped_timeline) - len(gap_segments)} | Gap Spaces: {len(gap_segments)}")
+    print(f"\n[MAPPING COMPLETE] Duration: {total_dur:.2f}s | Words Synced: {len(result['words'])}")
+    print(f"Asset-Backed (MAIN Documentary Engine): {len(mapped_timeline) - len(gap_segments)} | Empty Gaps (Fallback Engines Only): {len(gap_segments)}")
     return result
 
 # -------------------------------------------------------------
@@ -193,28 +197,28 @@ def format_step5_consultation_prompt(gap_segments: List[Dict[str, Any]]) -> str:
     as specified in handwritten Step 5 & Substep 5(1).
     """
     msg = []
-    msg.append("## 🎨 STEP 5 & 5(1): VISUAL ENGINE SELECTION FOR GAP SEGMENTS\n")
-    msg.append("Transcript aur audio analysis ke baad kuch aise parts identify hue hain jinke liye **koi original archival photo/asset exist nahi karta** (Khali space).\n")
-    msg.append("Hamare Master Plugin me aisi situations ke liye **3 World-Class Visual Engines** available hain. Aap bataiye in khali parts ke liye aapko konsa visual approach chahiye:\n")
+    msg.append("## 🎨 STEP 5 & 5(1): VISUAL ENGINE SELECTION FOR NO-ASSET GAPS ONLY\n")
+    msg.append("**Note:** Jahan-jahan real archival assets available hain, wahan strictly aapki **Main Ashu-Dalal 3D Documentary Engine** hi chalegi.\n")
+    msg.append("Sirf neeche diye gaye *'khali parts'* (missing-asset gaps) jinke liye koi real asset nahi mila, unke liye **3 Fallback Visual Engines** available hain:\n")
 
-    msg.append("### 1️⃣ Engine 1: Lemo-Opuscar Studio (Curated Film Styles)")
+    msg.append("### 1. Lemo-Opuscar Studio (Curated Film Styles)")
     for s in get_lemo_styles(8):
-        msg.append(f"  • `{s['name']}`: Cinematic thematic style preset")
+        msg.append(f"  - `{s['name']}`: Cinematic thematic style preset")
 
-    msg.append("\n### 2️⃣ Engine 2: p5.brush (Natural Generative Media)")
+    msg.append("\n### 2. p5.brush (Natural Generative Media)")
     for m in BRUSH_MEDIA:
-        msg.append(f"  • `{m['name']}`: {m['desc']}")
+        msg.append(f"  - `{m['name']}`: {m['desc']}")
 
-    msg.append("\n### 3️⃣ Engine 3: 3D-Animator / Three.js (Procedural 3D World)")
+    msg.append("\n### 3. 3D-Animator / Three.js (Procedural 3D World)")
     for s in STYLES_3D[:6]:
-        msg.append(f"  • `{s['name']}`: {s['desc']}")
+        msg.append(f"  - `{s['name']}`: {s['desc']}")
 
     msg.append("\n---\n")
-    msg.append("### 📌 Identified Gap Segments Waiting for Your Decision:")
+    msg.append("### Identified No-Asset Gap Segments Waiting for Your Choice:")
     for i, gap in enumerate(gap_segments, 1):
-        msg.append(f"{i}. **[{gap['start']:.1f}s – {gap['end']:.1f}s]** ({gap['duration']}s): *\"{gap['text']}\"*")
+        msg.append(f"{i}. **[{gap['start']:.1f}s - {gap['end']:.1f}s]** ({gap['duration']}s): *\"{gap['text']}\"*")
 
-    msg.append("\n💡 *Aap inme se koi bhi engine choose kar sakte hain, aur agar aapko **aur styles** dekhne hain toh bas bolen — hum poori 100+ styles ki list provide karenge!*")
+    msg.append("\n*Batayein in khali parts ke liye konsa engine aur style use karna hai? Agar aapko **aur styles** chahiye toh bas bolen — hum poori 100+ styles ki list dikha denge.*")
     return "\n".join(msg)
 
 def main():
