@@ -109,7 +109,10 @@ def main():
     parser.add_argument("--suggest-topics", action="store_true", help="Step 1: Print curated documentary topics")
     parser.add_argument("--list-gap-styles", action="store_true", help="Step 5(1): List styles for the 3 gap fallback engines")
     parser.add_argument("--sync-audio", type=str, help="Step 4: Run WhisperX / Whisper word-level alignment on audio")
-    parser.add_argument("--fetch-assets", type=str, help="Step 3: Download & verify real internet archival assets")
+    parser.add_argument("--fetch-assets", type=str, help="Step 3: Download & verify real internet/social assets (multi-source)")
+    parser.add_argument("--sources", type=str, default="all", help="Sources for --fetch-assets (all or wikimedia,wikipedia,openverse,archive,reddit)")
+    parser.add_argument("--from-urls", type=str, default="", help="Comma-separated direct image URLs found via full web/social research")
+    parser.add_argument("--tags", type=str, default="", help="Bilingual/phonetic alias tags for --fetch-assets (for WhisperX Hindi/Hinglish sync)")
     parser.add_argument("--fetch-sfx", type=str, help="Openverse: Fetch real CC-licensed SFX (comma-separated, e.g. whoosh,paper,stamp)")
     parser.add_argument("--fetch-music", type=str, help="Openverse: Search query for ambient documentary music bed")
     parser.add_argument("--sound-mode", type=str, choices=["openverse", "legacy_synth"], help="Switch default sound engine between openverse and legacy_synth")
@@ -197,7 +200,12 @@ def main():
     if args.fetch_assets:
         fetch_script = os.path.join(DOC_SCRIPTS, "asset_fetcher.py")
         out_dir = args.out if not args.out.endswith(".mp4") else "assets"
-        subprocess.run([sys.executable, fetch_script, "--query", args.fetch_assets, "--out", out_dir], check=True)
+        cmd = [sys.executable, fetch_script, "--query", args.fetch_assets, "--out", out_dir, "--sources", args.sources]
+        if args.from_urls:
+            cmd.extend(["--from-urls", args.from_urls])
+        if args.tags:
+            cmd.extend(["--tags", args.tags])
+        subprocess.run(cmd, check=True)
         return
 
     if args.auto_intake:
@@ -218,6 +226,8 @@ def main():
         cmd = ["node", "render.mjs"]
         if args.stills:
             cmd.append(f"--stills={args.stills}")
+            if args.out != "out/final.mp4":
+                cmd.append(f"--out={args.out}")
         else:
             cmd.extend(["--video", f"--out={args.out}", f"--style={args.style}"])
         subprocess.run(cmd, cwd=KIT_3D, check=True)
@@ -227,6 +237,8 @@ def main():
         cmd = ["node", "render_brush.mjs"]
         if args.stills:
             cmd.append(f"--stills={args.stills}")
+            if args.out != "out/final.mp4":
+                cmd.append(f"--out={args.out}")
         else:
             cmd.extend(["--video", f"--out={args.out}"])
         subprocess.run(cmd, cwd=KIT_BRUSH, check=True)

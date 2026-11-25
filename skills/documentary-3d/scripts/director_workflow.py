@@ -220,6 +220,10 @@ def format_step5_consultation_prompt(gap_segments: List[Dict[str, Any]]) -> str:
     for s in STYLES_3D[:6]:
         msg.append(f"  - `{s['name']}`: {s['desc']}")
 
+    msg.append("\n### 4. Combined Hybrid Mode (`studio.py --combo` — Multi-Engine Fusion)")
+    msg.append("  - Combine `3D-Animator` shaders + `p5.brush` animated CanvasTextures + `Lemo-Opuscar` palettes/GTAO/CRT (`guides/COMBINATIONS.md`).")
+    msg.append("  - Optional Classic Insert: `Vintage 2D Silent-Film` (`vintage_engine.py`).")
+
     msg.append("\n---\n")
     msg.append("### Identified No-Asset Gap Segments Waiting for Your Choice:")
     for i, gap in enumerate(gap_segments, 1):
