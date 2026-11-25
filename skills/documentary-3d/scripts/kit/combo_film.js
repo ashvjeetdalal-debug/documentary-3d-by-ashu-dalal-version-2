@@ -133,7 +133,8 @@ export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMo
 
   // Optional Readability-Protected Archival Evidence Card (if --photo supplied)
   if (photoUrl) {
-    const tex = await loadTextureAsync(photoUrl);
+    const normPhoto = (photoUrl.startsWith('/') || photoUrl.startsWith('http')) ? photoUrl : '/' + photoUrl;
+    const tex = await loadTextureAsync(normPhoto);
     if (tex) {
       const cardGroup = new THREE.Group();
       cardGroup.name = 'archival_card';

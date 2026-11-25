@@ -60,7 +60,9 @@ const useLegacySfx = arg('legacy-sfx', false) || process.env.ASHU_SOUND_ENGINE =
 if (useLegacySfx) {
   run(py, ['tools/gen_sfx.py', '--story', storyFile, '--duration', String(dur)]);
 } else {
-  const openverseScript = path.resolve(project, '../../documentary-3d/scripts/openverse_sfx.py');
+  const localOv = path.join(project, 'tools/openverse_sfx.py');
+  const pluginOv = path.resolve(project, '../../documentary-3d/scripts/openverse_sfx.py');
+  const openverseScript = fs.existsSync(localOv) ? localOv : pluginOv;
   const kinds = [...new Set((story.sfx || []).map((s) => s.kind).filter(Boolean))];
   const mood = story.music && story.music.kind === 'pad' ? `${story.music.mood || 'dark'} ambient documentary underscore` : '';
   if (fs.existsSync(openverseScript) && (kinds.length || mood)) {

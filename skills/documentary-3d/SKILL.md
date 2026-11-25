@@ -58,7 +58,7 @@ Read [`references/style-guide.md`](references/style-guide.md) before planning sh
 3. **Red-only accent (`#d0312d` / BGR `(45, 49, 208)`)**: Reserved strictly for strings/yarn, wobble focus circles, stamps, key labels, and end title.
 4. **Build & Contact-Sheet Stills QA**: Edit data blocks in a project copy of `board_engine.py` (keep rendering machinery intact). Render stills (`python board_engine.py stills 2,9,22,...`), inspect a contact sheet, fix layout/BGR color/font glyphs/camera targets before full render.
 5. **Parallel Chunked Render & Splice**: Split full render across CPU cores (`python board_engine.py full START END part.mp4`), render approved gap-engine clips (`p5.brush` / `lemo-opuscar` / `3D-animator` / `vintage_engine.py`), and splice cleanly with [`splice.py`](scripts/splice.py) / `splice.sh`.
-6. **Openverse Sound Design & Master Audio (`-14 LUFS`)**: Fetch real CC-licensed SFX & music beds via [`openverse_sfx.py`](scripts/openverse_sfx.py), mix frame-accurately with ducking (`kit/mix.py` or `mix_and_mux.py`) to **-14 LUFS / -1.5 dBTP**, and deliver CRF 24 shareable MP4 (`ffmpeg` verified).
+6. **Openverse Sound Design & Master Audio (`-14 LUFS`)**: Fetch real CC-licensed SFX & music beds via [`openverse_sfx.py`](scripts/openverse_sfx.py) (`sound/whoosh.wav`, `sound/music_bed.wav`), write `sound/cues.json`, and run [`kit/mix.py`](scripts/kit/mix.py) (`python kit/mix.py sound/cues.json sound/mix.wav`) for multi-SFX ducked **-14 LUFS / -1.5 dBTP** mastering (or `mix_and_mux.py` for single bed + voiceover). *(Note: Legacy `sound_bed.py` is silenced by default via `sound_config.json`.)*
 
 ---
 

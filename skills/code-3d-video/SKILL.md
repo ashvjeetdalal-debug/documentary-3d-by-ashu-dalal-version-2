@@ -6,6 +6,9 @@ compatibility: Node 18+, Python 3.9+ with numpy, ffmpeg + ffprobe on PATH, Chrom
 
 # code-3d-video
 
+> [!NOTE]
+> **Version 3 Role Rule**: Inside `documentary-3d-by-ashu-dalal-version-3`, `code-3d-video` is part of the **Primary 3D Documentary Backbone** alongside `board_engine.py`. Follow `rules/AGENTS.md` 5-Step Intake (Topic $\to$ Audio $\to$ Zero-Fake Internet Assets $\to$ WhisperX $\to$ Gap Choice) when making documentaries; `tools/build.mjs` defaults to **Openverse SFX/Music** (legacy `gen_sfx.py` silenced unless `--legacy-sfx`).
+
 Pipeline: **brief -> script -> voice -> word timings -> 3D scene (kit) -> QA stills -> parallel deterministic render
 (motion blur) -> sfx/music mix -> MP4.** Everything visual is code. The only thing this skill cannot create is the
 voice recording (see `references/sound-and-voice.md`).

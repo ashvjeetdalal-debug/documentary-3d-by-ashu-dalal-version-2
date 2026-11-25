@@ -5,6 +5,9 @@ description: Direct and produce short cinematic films, explainers, and motion gr
 
 # Lemo-Opuscar — Code-Driven Film Studio (101 Styles)
 
+> [!NOTE]
+> **Version 3 Role Rule**: When producing a documentary under `documentary-3d-by-ashu-dalal-version-3`, follow `rules/AGENTS.md` first: **Main Ashu-Dalal Documentary (`board_engine.py` / `code-3d-video`)** handles all asset-backed narration. Use `lemo-opuscar` for **no-asset gap segments** (Step 5 operator choice) or `--combo` bridges (`lemo_bridge.js`, `post.js`, `crt.js`), unless explicitly asked standalone.
+
 Direct and produce complete animated films, motion explainers, and visual essays entirely through code. No generative video hallucination or cloud rendering costs—every frame, camera move, subtitle, and audio cue is driven by deterministic code.
 
 The studio library contains **101 curated styles** located in `${PLUGIN_ROOT}/skills/lemo-opuscar/styles/` and core tools in `${PLUGIN_ROOT}/skills/lemo-opuscar/core/`.
