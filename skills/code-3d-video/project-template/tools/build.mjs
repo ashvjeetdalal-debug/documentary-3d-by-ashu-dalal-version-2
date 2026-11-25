@@ -55,8 +55,14 @@ else {
   run('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', 'build/segs.txt', '-c', 'copy', 'build/video_silent.mp4']);
 }
 
-// 4. audio (Openverse real SFX/music active by default; legacy gen_sfx.py silenced unless --legacy-sfx or ASHU_SOUND_ENGINE=legacy_synth)
-const useLegacySfx = arg('legacy-sfx', false) || process.env.ASHU_SOUND_ENGINE === 'legacy_synth';
+// 4. audio (Openverse real SFX/music active by default; legacy gen_sfx.py silenced unless --legacy-sfx, ASHU_SOUND_ENGINE=legacy_synth, or sound_config.json)
+let cfgLegacy = false;
+for (const cfgPath of [path.join(project, 'tools/sound_config.json'), path.resolve(project, '../../documentary-3d/scripts/sound_config.json')]) {
+  if (fs.existsSync(cfgPath)) {
+    try { cfgLegacy = JSON.parse(fs.readFileSync(cfgPath, 'utf8')).active_engine === 'legacy_synth'; break; } catch {}
+  }
+}
+const useLegacySfx = arg('legacy-sfx', false) || process.env.ASHU_SOUND_ENGINE === 'legacy_synth' || cfgLegacy;
 if (useLegacySfx) {
   run(py, ['tools/gen_sfx.py', '--story', storyFile, '--duration', String(dur)]);
 } else {
