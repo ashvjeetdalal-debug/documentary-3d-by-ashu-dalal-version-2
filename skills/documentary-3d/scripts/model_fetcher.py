@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
 Documentary 3D by Ashu Dalal (Version 3) - Real CC0 / Open 3D Model (.glb / .gltf) Fetcher
-Searches and downloads verified real 3D geometry for gap scenes when primitive shapes are not enough:
+Searches and downloads verified real 3D geometry for standalone 3D-Animator scenes when primitive shapes are not enough:
   1. Poly Haven Public 3D Models API (500+ CC0 photogrammetry & studio props with 1k/2k glTF + .bin + textures)
   2. Direct --from-urls (.glb or .gltf from Sketchfab CC0/CC-BY, NASA 3D, Smithsonian 3D, Kenney, Quaternius)
 
-Validates glTF JSON / glb binary magic header (b'glTF') and writes models_manifest.json for combo_film.js & 3d-animator.
+Validates glTF JSON / glb binary magic header (b'glTF') and writes models_manifest.json for 3d-animator.
 """
 
 import os
