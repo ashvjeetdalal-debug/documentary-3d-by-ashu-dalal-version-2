@@ -1,7 +1,7 @@
 {
-  "name": "documentary-3d-by-ashu-dalal-version-2",
-  "displayName": "Documentary 3D by Ashu Dalal Version 2",
-  "version": "2.1.0",
+  "name": "documentary-3d-by-ashu-dalal-version-3",
+  "displayName": "Documentary 3D by Ashu Dalal Version 3",
+  "version": "3.0.0",
   "description": "Master code-driven documentary suite by Ashu Dalal. Uses the restored Ashu-Dalal Evidence-Board & Code-3D-Video Documentary backbone as the primary engine, WhisperX for word-level alignment, verified real internet archival assets (zero fake assets), Openverse API for real SFX & music beds (legacy synth silenced but preserved), and p5.brush / lemo-opuscar / 3D-animator exclusively for missing-asset gap segments.",
   "logo": "assets/logo.svg",
   "suggestedPrompts": [

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Documentary 3D by Ashu Dalal (Version 2.1) - Master Studio CLI
+Documentary 3D by Ashu Dalal Version 3 - Master Studio CLI
 Strict Hierarchy:
   PRIMARY BACKBONE:
     1. Ashu Dalal Documentary Engine (board_engine.py + code-3d-video) - Used for ALL asset-backed narration
@@ -52,7 +52,7 @@ def set_sound_mode(mode):
 
 def list_engines():
     sound_mode = get_sound_mode()
-    print("\n=== DOCUMENTARY 3D BY ASHU DALAL (V2.1) - ENGINE HIERARCHY ===")
+    print("\n=== DOCUMENTARY 3D BY ASHU DALAL VERSION 3 - ENGINE HIERARCHY ===")
     print("\n[PRIMARY BACKBONE - ALWAYS USED FOR ASSET-BACKED NARRATION]")
     print("  1. Ashu Dalal Evidence-Board Documentary (board_engine.py, splice.py, mix_and_mux.py)")
     print(f"  2. Original Code-3D-Video Kit ({CODE_3D_SKILL})")
@@ -85,7 +85,7 @@ def list_styles():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Documentary 3D by Ashu Dalal (V2.1) - Master Studio CLI")
+    parser = argparse.ArgumentParser(description="Documentary 3D by Ashu Dalal Version 3 - Master Studio CLI")
     parser.add_argument("--list-engines", action="store_true", help="Show engine hierarchy and active sound mode")
     parser.add_argument("--list-styles", action="store_true", help="List all gap-only Lemo & 3D styles")
     parser.add_argument("--workflow", action="store_true", help="Show the canonical 5-Step Director Workflow")

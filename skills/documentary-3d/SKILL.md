@@ -1,9 +1,9 @@
 ---
-name: documentary-3d-by-ashu-dalal-version-2
+name: documentary-3d-by-ashu-dalal-version-3
 description: Master Documentary & 3D Production Suite by Ashu Dalal. Strictly follows the primary Ashu-Dalal Evidence-Board + Code-3D-Video Documentary backbone for all asset-backed narration, uses WhisperX for word-level alignment, downloads real verified internet archival assets (zero fake assets), uses Openverse for real SFX/music (legacy synth silenced but preserved), and invokes p5.brush / lemo-opuscar / 3D-animator ONLY for empty no-asset gaps after operator consultation.
 ---
 
-# Documentary 3D by Ashu Dalal (Version 2.1 — Restored Main Backbone + Gap Engines + Openverse Audio)
+# Documentary 3D by Ashu Dalal Version 3 (Restored Main Backbone + Gap Engines + Openverse Audio)
 
 Build narrated cinematic documentary videos in code, preserving the **original Ashu Dalal (`kaz-documentary`) Evidence-Board** and **original 3D (`code-3d-video`)** main files intact as the primary backbone.
 

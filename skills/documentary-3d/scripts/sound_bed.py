@@ -1,5 +1,5 @@
 """Kaz Documentary sound bed: dark drone + pulse + SFX, synthesized (no downloads).
-NOTE: SILENCED BY DEFAULT in Version 2.1 in favor of Openverse real SFX & music (openverse_sfx.py).
+NOTE: SILENCED BY DEFAULT in Version 3 in favor of Openverse real SFX & music (openverse_sfx.py).
 All original synthesis code is preserved intact below. To re-enable anytime:
   - Set "active_engine": "legacy_synth" in sound_config.json, OR
   - Set environment variable ASHU_SOUND_ENGINE=legacy_synth, OR
