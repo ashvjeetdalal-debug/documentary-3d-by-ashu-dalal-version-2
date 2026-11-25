@@ -2,11 +2,11 @@
   "name": "documentary-3d-by-ashu-dalal-version-3",
   "displayName": "Documentary 3D by Ashu Dalal Version 3",
   "version": "3.0.0",
-  "description": "Clean 3-engine documentary studio by Ashu Dalal: Ashu Dalal Evidence-Board & Vintage 2D as the primary system, combined with 3D-Animator (primarily for no-asset gaps or flexible standalone 3D scenes) and Lemo-Opuscar (for overall visual polish, 99 styles, GTAO/DOF & CRT), powered by WhisperX sync, real internet archival assets, and a bundled CC0 documentary SFX + Openverse audio engine.",
+  "description": "Clean 3-independent-engine documentary & 3D studio by Ashu Dalal: Ashu Dalal Evidence-Board & Vintage 2D as the primary documentary system, Lemo-Opuscar (99 styles, GTAO/DOF, CRT) at full potential for deep-researched no-asset gaps, and 3D-Animator as a flexible standalone full-potential 3D engine anytime/anywhere — powered by WhisperX sync, real internet archival assets, and YouTube + internet CC documentary SFX clamped at 15%-20% volume.",
   "logo": "assets/logo.svg",
   "suggestedPrompts": [
     "Start the 5-step Ashu Dalal documentary workflow for a new historical topic",
-    "Sync my voiceover with WhisperX, download verified internet archival assets, and identify no-asset gaps",
-    "Fill no-asset gaps or build a 3D scene using 3D-Animator + Lemo-Opuscar glitch-free combinations"
+    "Sync my voiceover with WhisperX, download verified internet archival assets, and build plan.md with deep-researched Lemo-Opuscar gap visuals",
+    "Create a full-potential standalone 3D-Animator scene or reel with YouTube/internet SFX at 15%-20% volume"
   ]
 }

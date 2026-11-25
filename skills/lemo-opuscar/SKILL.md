@@ -6,7 +6,7 @@ description: Direct and produce short cinematic films, explainers, and motion gr
 # Lemo-Opuscar — Code-Driven Film Studio (99 Styles)
 
 > [!NOTE]
-> **Version 3 Role Rule**: When producing a documentary under `documentary-3d-by-ashu-dalal-version-3`, follow `rules/AGENTS.md` first: **Main Ashu-Dalal Documentary (`board_engine.py`)** handles all asset-backed narration. Use `lemo-opuscar` to make the overall video better (color palettes, GTAO/DOF `post.js`, VHS/CRT `crt.js`, `DIRECTOR.md` pacing, and `--combo` bridges with `3d-animator`), as well as for gap segments or standalone films.
+> **Version 3 Role Rule**: When producing a documentary under `documentary-3d-by-ashu-dalal-version-3`, follow `rules/AGENTS.md` first: **Main Ashu-Dalal Documentary (`board_engine.py`)** handles all asset-backed narration, while **`lemo-opuscar` is the dedicated engine for no-asset gaps (*khali parts*)** — used at **100% full potential** (`STYLE.md`, `demo/`, `DIRECTOR.md`, `TECHNIQUE.md`, GTAO/DOF `post.js`, VHS/CRT `crt.js`) after deep internet visual research in `plan.md`. Never bridge or mix `lemo-opuscar` into combo pipelines with `3d-animator`.
 
 Direct and produce complete animated films, motion explainers, and visual essays entirely through code. No generative video hallucination or cloud rendering costs—every frame, camera move, subtitle, and audio cue is driven by deterministic code.
 
@@ -54,7 +54,7 @@ Each style folder in `styles/<style_name>/` contains:
 
 ## 🎬 5-Step Production Workflow
 
-> *Note:* When working inside a documentary workflow, follow `rules/AGENTS.md` (`plan.md`, `board_engine.py`, `assets/sfx/` + `openverse_sfx.py`); use the standalone steps below when authoring standalone Lemo films.
+> *Note:* When working inside a documentary workflow, follow `rules/AGENTS.md` (`plan.md`, `board_engine.py`, `openverse_sfx.py` with YouTube + internet SFX clamped at 15%–20% volume); use the standalone steps below when authoring standalone Lemo films.
 
 1. **Intake & Style Selection**: Select a style from `styles/` that matches the topic's mood and audience.
 2. **Treatment & Script**: Write a `TREATMENT.md` defining the 3-act emotional arc, beats, voiceover lines, and sound cues.

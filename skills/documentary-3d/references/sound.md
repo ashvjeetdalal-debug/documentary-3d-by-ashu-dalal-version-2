@@ -1,7 +1,7 @@
 # Sound
 
 > [!NOTE]
-> **Version 3 Audio Policy (`rules/AGENTS.md`):** Always resolve documentary SFX from the pre-bundled CC0 pack (`assets/sfx/`) or fetch real CC/PD audio via `openverse_sfx.py` (`python studio.py --fetch-sfx=... --fetch-music=...`). Avoid synthesizing SFX or generating AI SFX unless explicitly requested; master to **-14 LUFS / -1.5 dBTP** via `kit/mix.py` or `mix_and_mux.py`.
+> **Version 3 Audio Policy (`rules/AGENTS.md`):** No bundled SFX pack is shipped. Always fetch free documentary SFX & music on demand from **YouTube (`yt-dlp`)** and internet CC/PD sources via `openverse_sfx.py` (`python studio.py --fetch-sfx=... --fetch-music=...`). **Mandatory SFX Volume Law:** Every SFX cue in `kit/mix.py` is strictly clamped between **15% and 20% volume** (`-16.48 dB` to `-13.98 dB`, default `17.5%` = `-15.14 dB`) so main voiceover audio is never compromised. Master to **-14 LUFS / -1.5 dBTP** via `kit/mix.py` or `mix_and_mux.py`.
 
 The voice sets the clock, the music gives the bed, and the effects make every action real. `kit/mix.py` builds the mix from `sound/cues.json` and levels it.
 

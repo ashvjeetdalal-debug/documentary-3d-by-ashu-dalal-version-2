@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
 Documentary 3D by Ashu Dalal Version 3 - Master Studio CLI
-Clean 3-Engine Architecture:
-  1. MAIN SYSTEM: Ashu Dalal Documentary Engine (board_engine.py + vintage_engine.py)
-  2. 3D ENGINE: 3D-Animator / Three.js Procedural Studio (skills/3d-animator/ + kit/) - Gap-primary + flexible standalone
-  3. POLISH & STYLES: Lemo-Opuscar Studio (99 film styles, GTAO/DOF, VHS/CRT, DIRECTOR.md)
+Clean 3 Independent Engines (Zero Compromised Combos):
+  1. MAIN DOCUMENTARY SYSTEM: Ashu Dalal Evidence-Board & Vintage 2D (board_engine.py, vintage_engine.py)
+  2. GAP-ONLY VISUAL ENGINE (FULL POTENTIAL): Lemo-Opuscar Studio (99 film styles, DIRECTOR.md, TECHNIQUE.md, core/ post)
+     - Used strictly for no-asset documentary gaps after deep internet visual research + plan.md consultation.
+  3. ON-DEMAND 3D ENGINE (ANYTIME & FULL POTENTIAL): 3D-Animator / Three.js (skills/3d-animator/kit/)
+     - Independent, user-controlled anytime/anywhere at full HDR 48x sub-frame potential + 12 styles.js looks.
   + AUTOMATED INTAKE & AUDIO:
     - WhisperX Word Alignment (audio_sync.py)
     - Zero-Fake Archival Asset Fetcher (asset_fetcher.py) & CC0 3D Model Fetcher (model_fetcher.py)
-    - Bundled 23-Cue CC0 Documentary SFX + Multi-Source Openverse Engine (openverse_sfx.py, legacy sound_bed.py silenced)
-    - Glitch-Free 10-Combo Runner (combo_runner.py)
+    - On-Demand YouTube & Multi-Source Free Documentary SFX (openverse_sfx.py; mix.py clamps SFX strictly 15%-20%)
 """
 import os
 import sys
@@ -20,9 +21,7 @@ import subprocess
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DOC_SCRIPTS = os.path.join(ROOT, "skills", "documentary-3d", "scripts")
 ANIM_3D_KIT = os.path.join(ROOT, "skills", "3d-animator", "kit")
-KIT_3D = os.path.join(DOC_SCRIPTS, "kit")
 LEMO_STYLES = os.path.join(ROOT, "skills", "lemo-opuscar", "styles")
-BUNDLED_SFX_DIR = os.path.join(ROOT, "assets", "sfx")
 SOUND_CONFIG = os.path.join(DOC_SCRIPTS, "sound_config.json")
 
 
@@ -51,90 +50,71 @@ def set_sound_mode(mode):
 
 def list_engines():
     sound_mode = get_sound_mode()
-    print("\n=== DOCUMENTARY 3D BY ASHU DALAL VERSION 3 - 3-ENGINE ARCHITECTURE ===")
-    print("\n[1. MAIN DOCUMENTARY SYSTEM (PRIMARY BACKBONE)]")
+    styles_count = len([s for s in os.listdir(LEMO_STYLES) if os.path.isdir(os.path.join(LEMO_STYLES, s)) and not s.startswith(('_', '.'))]) if os.path.exists(LEMO_STYLES) else 0
+    print("\n=== DOCUMENTARY 3D BY ASHU DALAL VERSION 3 - 3 INDEPENDENT ENGINES ===")
+    print("\n[1. MAIN DOCUMENTARY SYSTEM (PRIMARY ARCHIVAL BACKBONE)]")
     print("  - Ashu Dalal Evidence-Board & Vintage 2D (board_engine.py, vintage_engine.py, splice.py, mix_and_mux.py)")
 
-    print("\n[2. 3D-ANIMATOR ENGINE (GAPS + FLEXIBLE STANDALONE)]")
-    print(f"  - Canonical 3D Kit:   {ANIM_3D_KIT}")
-    print(f"  - Shared Combo Kit:   {KIT_3D}")
+    print("\n[2. GAP VISUAL ENGINE (NO-ASSET GAPS ONLY - FULL POTENTIAL)]")
+    print(f"  - Lemo-Opuscar Studio ({styles_count} styles + DIRECTOR.md + TECHNIQUE.md + GTAO/DOF + CRT)")
+    print("    Always perform deep internet visual research -> write plan.md -> build full Lemo style implementation.")
 
-    print("\n[3. LEMO-OPUSCAR STUDIO (OVERALL VIDEO POLISH & 99 STYLES)]")
-    styles_count = len([s for s in os.listdir(LEMO_STYLES) if os.path.isdir(os.path.join(LEMO_STYLES, s)) and not s.startswith(('_', '.'))]) if os.path.exists(LEMO_STYLES) else 0
-    print(f"  - Lemo-Opuscar ({styles_count} styles + GTAO/DOF post.js + VHS/CRT crt.js)")
-
-    print("\n[GLITCH-FREE COMBINER - 10 VERIFIED COMBOS]")
-    print(f"  - Combo Runner: {os.path.join(DOC_SCRIPTS, 'combo_runner.py')} (Guide: guides/COMBINATIONS.md)")
-    print("    Flags: --combo --shader=<look|timeline> --lemo=<slug> --post=<hdr|gtao|crt|none>")
+    print("\n[3. 3D-ANIMATOR ENGINE (ANYTIME / ANYWHERE - 100% FULL POTENTIAL)]")
+    print(f"  - Standalone 3D Kit: {ANIM_3D_KIT}")
+    print("    Full 48x Halton HDR motion blur, thin-lens bokeh DOF, cosine sky soft shadows & 12 styles.js looks.")
 
     print("\n[INTAKE, 3D MODELS & DOCUMENTARY AUDIO]")
     print(f"  - WhisperX Speech Sync & Gap Mapping: {os.path.join(DOC_SCRIPTS, 'audio_sync.py')}")
     print(f"  - Zero-Fake Archival Asset Fetcher:   {os.path.join(DOC_SCRIPTS, 'asset_fetcher.py')}")
     print(f"  - CC0 / Open 3D Model Fetcher (.glb): {os.path.join(DOC_SCRIPTS, 'model_fetcher.py')}")
-    print(f"  - Script & Gap Planner (plan.md):     python studio.py --plan")
-    print(f"  - Sound System (Active Mode: {sound_mode}):")
-    print(f"      * Bundled CC0 Documentary SFX: {BUNDLED_SFX_DIR}")
-    print(f"      * Multi-Source CC Audio:       {os.path.join(DOC_SCRIPTS, 'openverse_sfx.py')}")
-    print("      * Legacy Synth (sound_bed.py): SILENCED BY DEFAULT, preserved intact (--sound-mode=legacy_synth)\n")
+    print("  - Script & Research Gap Planner:      python studio.py --plan")
+    print(f"  - Sound System (Active Mode: {sound_mode} | SFX Clamped 15%-20%):")
+    print(f"      * YouTube + Free Internet SFX:    {os.path.join(DOC_SCRIPTS, 'openverse_sfx.py')}")
+    print("      * Legacy Synth (sound_bed.py):    SILENCED BY DEFAULT (--sound-mode=legacy_synth)\n")
 
 
 def list_styles():
-    print("\n=== 3D-ANIMATOR SHADER STYLES (12) ===")
+    print("\n=== 3D-ANIMATOR SHADER STYLES (12 - FOR ON-DEMAND 3D SCENES) ===")
     for s in ['lit', 'clay', 'paper', 'shadow', 'blueprint', 'toon', 'voxel', 'thermal', 'synth', 'chrome', 'neon', 'mix']:
         print(f"  - {s}")
 
-    print("\n=== LEMO-OPUSCAR FILM STYLES ===")
+    print("\n=== LEMO-OPUSCAR FILM STYLES (FOR DOCUMENTARY GAPS AT FULL POTENTIAL) ===")
     if os.path.exists(LEMO_STYLES):
         styles = [s for s in sorted(os.listdir(LEMO_STYLES)) if os.path.isdir(os.path.join(LEMO_STYLES, s)) and not s.startswith(('_', '.'))]
         for i, s in enumerate(styles, 1):
             print(f"  {i:3d}. {s}")
-    print("\nUse --list-gap-styles for Step 5(1) consultation options.\n")
+    print("\nUse --list-gap-styles for Step 5(1) Lemo-Opuscar gap consultation options.\n")
 
 
 def main():
     parser = argparse.ArgumentParser(description="Documentary 3D by Ashu Dalal Version 3 - Master Studio CLI")
-    parser.add_argument("--list-engines", action="store_true", help="Show 3-engine architecture and active sound mode")
-    parser.add_argument("--list-styles", action="store_true", help="List all Lemo & 3D-Animator styles")
-    parser.add_argument("--list-combos", action="store_true", help="List all 10 verified glitch-free combinations (see guides/COMBINATIONS.md)")
-    parser.add_argument("--list-sfx", action="store_true", help="List bundled 23-cue CC0 documentary SFX pack")
-    parser.add_argument("--combo", action="store_true", help="Run Glitch-Free Modular Combo Engine (3D-Animator + Lemo-Opuscar + photos + .glb + handheld)")
-    parser.add_argument("--shader", type=str, default="lit", help="3D-Animator shader or timeline for --combo (e.g. paper or 0:lit,2.5:blueprint)")
-    parser.add_argument("--lemo", type=str, default="none", help="Lemo-Opuscar style slug for --combo (e.g. dark-documentary)")
-    parser.add_argument("--post", type=str, default="hdr", choices=["hdr", "gtao", "crt", "none"], help="Post-FX pass for --combo")
-    parser.add_argument("--photo", type=str, default="", help="Optional /assets/... photo card with readability lock for --combo")
-    parser.add_argument("--model", type=str, default="", help="Optional downloaded .glb/.gltf 3D model path for --combo")
-    parser.add_argument("--width", type=int, default=1920, help="Frame width for --combo (e.g. 1920 or 1080)")
-    parser.add_argument("--height", type=int, default=1080, help="Frame height for --combo (e.g. 1080 or 1920)")
-    parser.add_argument("--total", type=float, default=6.0, help="Duration in seconds for --combo")
-    parser.add_argument("--n", type=int, default=4, help="Sub-frame samples for --combo (4=preview, 16=stills, 48=master)")
-    parser.add_argument("--video", action="store_true", help="Render MP4 video in --combo mode")
-    parser.add_argument("--audio", type=str, help="Mastered audio track to mux in --combo mode")
-    parser.add_argument("--handheld-csv", type=str, help="Motion CSV for real handheld camera shake pass")
-    parser.add_argument("--project", type=str, default="", help="Project folder path for --combo /assets resolution")
+    parser.add_argument("--list-engines", action="store_true", help="Show the 3 independent engines and audio setup")
+    parser.add_argument("--list-styles", action="store_true", help="List all Lemo (gap) & 3D-Animator styles")
     parser.add_argument("--workflow", action="store_true", help="Show the canonical 5-Step Director Workflow")
-    parser.add_argument("--plan", action="store_true", help="Generate research-driven plan.md mapping script & gap visuals")
+    parser.add_argument("--plan", action="store_true", help="Generate internet-research-ready plan.md mapping script & Lemo gaps")
     parser.add_argument("--topic", type=str, default="Documentary Production", help="Documentary topic for --plan")
     parser.add_argument("--script-file", type=str, default="", help="Script file path for --plan")
     parser.add_argument("--mapping", type=str, default="", help="Step 4 project_mapping.json path for --plan")
     parser.add_argument("--research-file", type=str, default="", help="Internet research notes file for --plan")
     parser.add_argument("--suggest-topics", action="store_true", help="Step 1: Print curated documentary topics")
-    parser.add_argument("--list-gap-styles", action="store_true", help="Step 5(1): List styles for 3D-Animator & Lemo-Opuscar")
+    parser.add_argument("--list-gap-styles", action="store_true", help="Step 5(1): List Lemo-Opuscar styles for no-asset gaps")
     parser.add_argument("--sync-audio", type=str, help="Step 4: Run WhisperX / Whisper word-level alignment on audio")
     parser.add_argument("--fetch-assets", type=str, help="Step 3: Download & verify real internet/social assets (multi-source)")
     parser.add_argument("--fetch-models", type=str, help="Download CC0 / open 3D .glb/.gltf models via Poly Haven / --from-urls")
     parser.add_argument("--res", type=str, default="1k", choices=["1k", "2k", "4k"], help="Resolution for --fetch-models")
     parser.add_argument("--max", type=int, default=8, help="Max assets/models to download")
     parser.add_argument("--sources", type=str, default="all", help="Sources for --fetch-assets or --fetch-sfx/--fetch-music")
-    parser.add_argument("--from-urls", type=str, default="", help="Comma-separated direct URLs")
+    parser.add_argument("--from-urls", type=str, default="", help="Comma-separated direct URLs (images, 3D models, or YouTube/audio SFX)")
     parser.add_argument("--tags", type=str, default="", help="Bilingual/phonetic alias tags for --fetch-assets / --fetch-models")
-    parser.add_argument("--fetch-sfx", type=str, help="Documentary SFX: Copy bundled CC0 cues or fetch from Openverse/Wikimedia/Archive")
-    parser.add_argument("--fetch-music", type=str, help="Openverse: Search query for ambient documentary music bed")
+    parser.add_argument("--fetch-sfx", type=str, help="Fetch free documentary SFX on demand from YouTube/Openverse/Wikimedia/Archive")
+    parser.add_argument("--fetch-music", type=str, help="Search query for ambient documentary music bed")
     parser.add_argument("--sound-mode", type=str, choices=["openverse", "legacy_synth"], help="Switch default sound engine between openverse and legacy_synth")
     parser.add_argument("--auto-intake", type=str, help="Run Step 4 WhisperX sync intake on audio file")
     parser.add_argument("--render-board", action="store_true", help="PRIMARY: Render Evidence Board via board_engine.py")
     parser.add_argument("--script", type=str, default="", help="Custom project board_engine.py script path for --render-board")
-    parser.add_argument("--render-3d", action="store_true", help="3D-ANIMATOR: Render Three.js 3D scene via headless Chrome")
-    parser.add_argument("--style", type=str, default="lit", help="Style name for 3D render")
+    parser.add_argument("--render-3d", action="store_true", help="3D-ANIMATOR: Render standalone Three.js 3D scene via headless Chrome at full potential")
+    parser.add_argument("--project", type=str, default="", help="Custom 3D-Animator project folder path for --render-3d")
+    parser.add_argument("--style", type=str, default="lit", help="Style name for --render-3d (styles.js)")
     parser.add_argument("--out", type=str, default="out/final.mp4", help="Output file path / directory")
     parser.add_argument("--stills", type=str, help="Comma-separated timestamps for still captures (e.g. 1.0,2.5)")
 
@@ -150,46 +130,6 @@ def main():
 
     if args.list_styles:
         list_styles()
-        return
-
-    if args.list_sfx:
-        ov_script = os.path.join(DOC_SCRIPTS, "openverse_sfx.py")
-        subprocess.run([sys.executable, ov_script, "--list"], check=True)
-        return
-
-    if args.list_combos or args.combo:
-        combo_script = os.path.join(DOC_SCRIPTS, "combo_runner.py")
-        if args.list_combos:
-            subprocess.run([sys.executable, combo_script, "--list"], check=True)
-            return
-        out_arg = args.out
-        if args.stills and args.video:
-            print("[STUDIO] Note: --stills and --video were both passed; rendering --stills (skipping --video).")
-        if args.stills and out_arg == "out/final.mp4":
-            out_arg = "stills"
-        out_arg = os.path.abspath(out_arg)
-        cmd = [
-            sys.executable, combo_script,
-            f"--shader={args.shader}",
-            f"--lemo={args.lemo}", f"--post={args.post}",
-            f"--width={args.width}", f"--height={args.height}",
-            f"--total={args.total}", f"--n={args.n}", f"--out={out_arg}"
-        ]
-        if args.photo:
-            cmd.append(f"--photo={args.photo}")
-        if args.model:
-            cmd.append(f"--model={args.model}")
-        if args.project:
-            cmd.append(f"--project={args.project}")
-        if args.stills:
-            cmd.append(f"--stills={args.stills}")
-        elif args.video:
-            cmd.append("--video")
-            if args.audio:
-                cmd.append(f"--audio={args.audio}")
-        if args.handheld_csv:
-            cmd.append(f"--handheld-csv={args.handheld_csv}")
-        subprocess.run(cmd, check=True)
         return
 
     if args.plan or args.suggest_topics or args.list_gap_styles or args.workflow:
@@ -217,9 +157,9 @@ def main():
             print("Next steps after topic + script:")
             print("  Step 1B (Gap Plan):        python studio.py --plan --topic='<topic>' --script-file=script.txt")
             print("  Step 3 (Zero-Fake Assets): python studio.py --fetch-assets='<keywords>'")
-            print("  Step 3B (3D .glb Models):  python studio.py --fetch-models='<keywords>'")
             print("  Step 4 (WhisperX Sync):    python studio.py --sync-audio=<voiceover.wav>")
-            print("  Documentary SFX & Music:   python studio.py --fetch-sfx='sub_drop,riser,whoosh,paper,typewriter,shutter,stamp'\n")
+            print("  Step 5 (Lemo Gaps):        Deep internet research -> Lemo-Opuscar full potential")
+            print("  Free Documentary SFX:      python studio.py --fetch-sfx='whoosh,paper,stamp'\n")
             return
 
     if args.fetch_models is not None and (args.fetch_models or args.from_urls):

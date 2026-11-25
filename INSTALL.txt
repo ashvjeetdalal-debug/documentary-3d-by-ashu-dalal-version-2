@@ -5,11 +5,13 @@ System Requirements:
   1. Node.js (v20 or newer): https://nodejs.org
   2. Python (v3.9 or newer): https://python.org
   3. FFmpeg (with libx264, aac, and ebur128 filter enabled): https://ffmpeg.org
+  4. yt-dlp (recommended for YouTube free documentary SFX downloads): https://github.com/yt-dlp/yt-dlp
 
 Quick Verification:
   node -v
   python --version
   ffmpeg -version
+  yt-dlp --version
 
 Dependencies Installation:
 --------------------------
@@ -23,29 +25,27 @@ Dependencies Installation:
    # Optional (for advanced voice & music tools from lemo-opuscar):
    pip install -r skills/lemo-opuscar/requirements.txt
 
-2. 3D-Animator & Combo Renderer (Puppeteer + Three.js):
-   cd skills/documentary-3d/scripts/kit
+2. 3D-Animator Renderer (Puppeteer + Three.js):
+   cd skills/3d-animator/kit
    npm install
 
-   (Note: `skills/3d-animator/kit/render.mjs` automatically shares these modules.
-    If you have Google Chrome installed on Windows and want to skip Chromium download:
+   (If you have Google Chrome installed on Windows and want to skip Chromium download:
     set PUPPETEER_SKIP_DOWNLOAD=1
     npm install
     set CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe)
 
 Quick Smoke Tests:
 ------------------
-1. List 3-engine architecture, bundled documentary SFX & 10 glitch-free combinations:
+1. List 3-engine hierarchy & Lemo-Opuscar gap styles:
    python studio.py --list-engines
-   python studio.py --list-combos
-   python studio.py --list-sfx
+   python studio.py --list-gap-styles
 
-2. Test 3D-Animator procedural renderer:
+2. Test 3D-Animator full-potential standalone renderer:
    python studio.py --render-3d --style=blueprint --stills=2.5
 
-3. Test Glitch-Free 3D-Animator + Lemo-Opuscar Combo renderer (GTAO & CRT):
-   python studio.py --combo --shader=paper --lemo=dark-documentary --post=gtao --stills=1.5 --out=stills_gtao
-   python studio.py --combo --shader=blueprint --lemo=briefing-board --post=crt --stills=1.5 --out=stills_crt
+3. Test YouTube + Internet SFX fetcher & plan.md generator:
+   python studio.py --fetch-sfx="whoosh" --sources=youtube,openverse --out=sound
+   python studio.py --plan --topic="Stuxnet" --script-file=script.txt --out=plan.md
 
 4. Test Evidence Board (in a project copy with your real assets/ paths):
    python studio.py --render-board --script=my_project/board_engine.py --stills=2,5

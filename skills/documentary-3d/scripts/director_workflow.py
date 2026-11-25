@@ -200,30 +200,26 @@ def _infer_gap_recommendation(text: str) -> Dict[str, Any]:
     low = text.lower()
     if any(k in low for k in ("hack", "code", "cyber", "virus", "worm", "network", "server", "data", "scan", "radar", "gps", "signal", "satellite")):
         return {
-            "engines": "3D-Animator (`blueprint`/`thermal` + `styleAt` morph) + Lemo (`lidar-survey` / `hologram-hud` / `circuit-board`)",
-            "combo": "--shader=0:lit,1.5:blueprint --lemo=dark-documentary --post=hdr",
-            "needs_3d_model": "Optional server/satellite/hardware .glb if physical hardware is mentioned",
-            "sfx": "whoosh, typing, glitch, shutter, sub_drop"
+            "lemo_styles": "`lidar-survey`, `hologram-hud`, `circuit-board`, `dark-documentary`",
+            "potential_notes": "Deep-research network topology/attack flow; apply Lemo STYLE.md + DIRECTOR.md pacing + core/three/post.js HDR/GTAO.",
+            "sfx": "whoosh, typing, glitch, shutter, sub_drop (15%-20% volume)"
         }
     if any(k in low for k in ("centrifuge", "engine", "turbine", "aircraft", "plane", "rocket", "submarine", "weapon", "machine", "camera", "device", "factory", "reactor")):
         return {
-            "engines": "3D-Animator (`--model=<slug>.glb` + `paper`/`blueprint`) + Lemo (`blueprint` / `assembly-line-diagram`)",
-            "combo": "--shader=paper --model=models/<slug>/<file>.gltf --lemo=blueprint --post=gtao",
-            "needs_3d_model": "RECOMMENDED: Fetch real CC0 .glb/.gltf via `model_fetcher.py --query='<subject>'` or `--from-urls`",
-            "sfx": "sub_drop, shutter, riser, projector"
+            "lemo_styles": "`blueprint`, `assembly-line-diagram`, `technical-teardown`, `isometric-cutaway`",
+            "potential_notes": "Deep-research real mechanical/engineering schematics; render at 100% Lemo-Opuscar potential with DOF & camera choreography.",
+            "sfx": "sub_drop, shutter, riser, projector (15%-20% volume)"
         }
     if any(k in low for k in ("war", "secret", "plan", "letter", "spy", "intelligence", "history", "19", "century", "treaty", "assassination", "murder", "escape")):
         return {
-            "engines": "3D-Animator (`paper`/`shadow` + GTAO/CRT) + Lemo (`halftone-dossier` / `vintage-collage` / `archive-lighttable` / `silent-film`)",
-            "combo": "--shader=paper --lemo=halftone-dossier --post=gtao",
-            "needs_3d_model": "Optional vintage prop .glb (desk/lantern/radio) via Poly Haven CC0",
-            "sfx": "paper, stamp, typewriter, whoosh, drone"
+            "lemo_styles": "`halftone-dossier`, `vintage-collage`, `archive-lighttable`, `silent-film`",
+            "potential_notes": "Deep-research historical context & archival layout cues; apply Lemo-Opuscar CRT/halftone/film-grain polish.",
+            "sfx": "paper, stamp, typewriter, whoosh, drone (15%-20% volume)"
         }
     return {
-        "engines": "Lemo-Opuscar (`dark-documentary` / `briefing-board`) + 3D-Animator (`lit`/`paper`/`clay` + `--post=gtao`)",
-        "combo": "--shader=paper --lemo=dark-documentary --post=gtao",
-        "needs_3d_model": "Decide after internet visual research (use `model_fetcher.py` if concrete 3D object helps clarity)",
-        "sfx": "whoosh, shutter, riser, sub_drop"
+        "lemo_styles": "`dark-documentary`, `briefing-board`, `kinetic-typography`",
+        "potential_notes": "Deep-research visual metaphors on the internet; build full-potential Lemo-Opuscar sequence from STYLE.md + demo/.",
+        "sfx": "whoosh, shutter, riser, sub_drop (15%-20% volume)"
     }
 
 
@@ -239,15 +235,15 @@ def generate_plan_md(
     """
     Create a structured, research-driven `plan.md` mapping every spoken line:
       - Asset-backed narration -> Primary Ashu-Dalal Evidence Board
-      - Empty Gaps ('khali parts') -> What is spoken, Mandatory Internet Visual Research brief,
-        3D-Animator + Lemo-Opuscar --combo blueprint, and downloadable .glb/.gltf 3D model plan.
+      - Empty Gaps ('khali parts') -> What is spoken, Mandatory Deep Internet Visual Research brief,
+        and full-potential Lemo-Opuscar style & post-FX blueprint (99 styles, STYLE.md + demo/).
     """
     assets_manifest = assets_manifest or []
     models_manifest = models_manifest or []
     lines = [
         f"# Documentary Production & Gap Visual Plan (`plan.md`) — {topic}\n",
         "> **System Law:** Real archival asset sections use the **Primary Ashu-Dalal Evidence Board (`board_engine.py`)**.",
-        "> **Gap Law:** For every no-asset *khali* part, AI **MUST research on the internet** (mechanics, real architecture, historical visual references, documentary staging) and update this plan BEFORE generating animations or choosing final styles across **3D-Animator** & **Lemo-Opuscar**.\n",
+        "> **Gap Law:** For every no-asset *khali* part, AI **MUST deeply research on the internet** (mechanics, real architecture, historical visual references, documentary staging) and update this plan BEFORE rendering strictly with **Lemo-Opuscar** at 100% full potential.\n",
         "---",
         "\n## 1. Timeline Overview & Asset Coverage\n",
     ]
@@ -290,13 +286,12 @@ def generate_plan_md(
             ts_label = f"{g['start']:.1f}s - {g['end']:.1f}s" if "start" in g and "end" in g else f"Segment {i}"
             lines.append(f"### Gap {i}: [{ts_label}]")
             lines.append(f"- **Kya Bola Ja Raha Hai (Spoken Narration):** *\"{txt}\"*")
-            lines.append("- **Internet Visual Research Checklist (AI Fill-In Before Build):**")
-            lines.append("  - [ ] Search real-world mechanics / architecture / geography / historical look behind this sentence.")
-            lines.append("  - [ ] Decide exact hero composition, animated metaphor, camera move, and 1–2 frame WhisperX trigger word.")
-            lines.append(f"- **Suggested Engines & Styles:** {rec['engines']}")
-            lines.append(f"- **Ready `--combo` Recipe:** `python studio.py --combo {rec['combo']} --stills=1.5,3.0`")
-            lines.append(f"- **3D Model Plan (`.glb` / `.gltf`):** {rec['needs_3d_model']}")
-            lines.append(f"- **Documentary Sound Cues (Bundled CC0 + Multi-Source):** `{rec['sfx']}`\n")
+            lines.append("- **Deep Internet Visual Research (AI Fill-In Before Coding):**")
+            lines.append("  - [ ] Search real-world mechanics / architecture / geography / historical look behind this spoken line.")
+            lines.append("  - [ ] Design full multi-layer visual choreography, camera blocking (`DIRECTOR.md`), and `>= 1.8s` subtitles.")
+            lines.append(f"- **Recommended Lemo-Opuscar Styles (99 Library):** {rec['lemo_styles']}")
+            lines.append(f"- **Full-Potential Build Notes (`STYLE.md` + `demo/` + `core/`):** {rec['potential_notes']}")
+            lines.append(f"- **On-Demand YouTube/Internet SFX (Mixed Strictly 15%-20%):** `{rec['sfx']}`\n")
 
     if models_manifest:
         lines.append(f"\n---\n\n## {sec_num}. Verified Downloaded 3D Models (`models_manifest.json`)\n")
@@ -318,33 +313,24 @@ def generate_plan_md(
 # -------------------------------------------------------------
 def format_step5_consultation_prompt(gap_segments: List[Dict[str, Any]]) -> str:
     """
-    Constructs the interactive consultation message for no-asset gaps across
-    Lemo-Opuscar, 3D-Animator, and glitch-free combined style combinations.
+    Constructs the interactive consultation message for no-asset gaps
+    using Lemo-Opuscar (99 styles) at full potential.
     """
     msg = []
-    msg.append("## 🎨 STEP 5 & 5(1): VISUAL ENGINE SELECTION FOR NO-ASSET GAPS ONLY\n")
+    msg.append("## 🎨 STEP 5 & 5(1): LEMO-OPUSCAR SELECTION FOR NO-ASSET GAPS ONLY\n")
     msg.append("**Note:** Jahan-jahan real archival assets available hain, wahan strictly aapki **Main Ashu-Dalal Documentary Engine** hi chalegi.\n")
-    msg.append("Sirf neeche diye gaye *'khali parts'* (missing-asset gaps) jinke liye koi real asset nahi mila, unke liye **2 Fallback Visual Engines + Glitch-Free Combined Mode** available hain:\n")
+    msg.append("Neeche diye gaye *'khali parts'* (missing-asset gaps) ke liye **Lemo-Opuscar Studio (99 Curated Film Styles)** ko deep internet research ke saath **full potential** par use kiya jayega:\n")
 
-    msg.append("### 1. Lemo-Opuscar Studio (99 Curated Film Styles)")
-    for s in get_lemo_styles(10):
-        msg.append(f"  - `{s['name']}`: Cinematic thematic style preset")
-
-    msg.append("\n### 2. 3D-Animator / Three.js (12 Procedural Shader Looks)")
-    for s in STYLES_3D[:8]:
-        msg.append(f"  - `{s['name']}`: {s['desc']}")
-
-    msg.append("\n### 3. Glitch-Free Combined Style Mode (`studio.py --combo` — 3D-Animator + Lemo-Opuscar)")
-    msg.append("  - Combine `3D-Animator` shaders (`lit`, `paper`, `blueprint`, `toon`, `thermal`, `synth`, `mix`) + `Lemo-Opuscar` palettes & GTAO/DOF or VHS/CRT (`guides/COMBINATIONS.md`).")
-    msg.append("  - Optional Classic Insert: `Vintage 2D Silent-Film` (`vintage_engine.py`).")
+    msg.append("### Recommended Lemo-Opuscar Film Styles")
+    for s in get_lemo_styles(15):
+        msg.append(f"  - `{s['name']}`: Full `STYLE.md` + `demo/` + `DIRECTOR.md` / `TECHNIQUE.md` pipeline")
 
     msg.append("\n---\n")
-    msg.append("### Identified No-Asset Gap Segments Waiting for Your Choice:")
+    msg.append("### Identified No-Asset Gap Segments Waiting for Your Approval:")
     for i, gap in enumerate(gap_segments, 1):
         msg.append(f"{i}. **[{gap['start']:.1f}s - {gap['end']:.1f}s]** ({gap['duration']}s): *\"{gap['text']}\"*")
 
-    msg.append("\n*Note: Detailed internet-researched gap designs & 3D `.glb` model suggestions `plan.md` me saved hain.*")
-    msg.append("*Batayein in khali parts ke liye konsa engine, combo aur style use karna hai? Agar aapko **aur styles** chahiye toh bas bolen — hum poori 99 styles ki list dikha denge.*")
+    msg.append("\n*Note: Deep internet visual research aur recommended Lemo styles `plan.md` me saved hain. Batayein in khali parts ke liye kaunse Lemo styles final karein? (Aur styles chahiye toh poori 99 list dikha dunga.)*")
     return "\n".join(msg)
 
 
@@ -369,15 +355,10 @@ def main():
         return
 
     if args.list_gap_styles:
-        print("\n=== STEP 5(1) VISUAL ENGINES & STYLES CATALOG ===")
-        print("\n1. 3D-ANIMATOR SHADER LOOKS (12):")
-        for s in STYLES_3D:
-            print(f"  --shader={s['name']:12} : {s['desc']}")
-
-        print("\n2. LEMO-OPUSCAR FILM STYLES (99 STYLES AVAILABLE):")
-        for s in get_lemo_styles(20):
-            print(f"  --lemo={s['name']:20}")
-        print("\nCombine cleanly via: python studio.py --combo --shader=<look> --lemo=<slug> --post=gtao|crt|hdr\n")
+        print("\n=== STEP 5(1) LEMO-OPUSCAR GAP STYLES CATALOG (99 STYLES) ===")
+        for s in get_lemo_styles(30):
+            print(f"  - {s['name']:24}")
+        print("\nBuild gaps using Lemo-Opuscar at full potential (STYLE.md + demo/ + DIRECTOR.md + TECHNIQUE.md).\n")
         return
 
     if args.plan:
