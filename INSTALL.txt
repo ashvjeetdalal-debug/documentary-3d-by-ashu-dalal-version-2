@@ -36,6 +36,10 @@ Dependencies Installation:
     npm install
     set CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe)
 
+4. New `code-3d-video` Project Folder (AI runs this automatically on new project creation):
+   python studio.py --init-3d my_3d_project
+   # Copies template, installs three + playwright + Chromium (`npm run setup`), and verifies WebGL (`npm run doctor`)
+
 Quick Smoke Tests:
 ------------------
 1. List all engines & 15 verified modular combinations:

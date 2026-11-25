@@ -68,7 +68,7 @@ Read [`references/style-guide.md`](references/style-guide.md) before planning sh
 | Script | Role |
 |---|---|
 | `board_engine.py` | **Primary Engine**: Continuous-camera Evidence Board renderer (pinned cards, tags, red strings, circles, stamps, grain, vignette). |
-| `code-3d-video` (`../code-3d-video/`) | **Primary 3D Engine**: Restored original 3D video kit (`builders.js`, `character.js`, `looks.js`, `stage.js`, `qa.mjs`, `lint.mjs`, `doctor.mjs`). |
+| `code-3d-video` (`../code-3d-video/`) | **Primary 3D Engine**: Restored original 3D video kit (`builders.js`, `character.js`, `looks.js`, `stage.js`, `qa.mjs`, `lint.mjs`, `doctor.mjs`). Always auto-initialize new project folders with `python studio.py --init-3d <dir>` (`npm run setup` + `npm run doctor`). |
 | `asset_fetcher.py` | Step 3: Downloads & PIL-verifies real historical assets from Wikimedia Commons / Wikipedia (zero fake assets). |
 | `audio_sync.py` | Step 4: Runs WhisperX (fallback: OpenAI Whisper) word-level alignment & subtitle sync. |
 | `director_workflow.py` | Step 4–5(1): Maps verified assets to transcript, detects empty gaps, presents 3 gap engines + style catalogs. |

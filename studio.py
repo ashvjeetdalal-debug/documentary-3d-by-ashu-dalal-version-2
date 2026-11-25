@@ -17,6 +17,7 @@ Strict Hierarchy:
 import os
 import sys
 import json
+import shutil
 import argparse
 import subprocess
 
@@ -71,7 +72,8 @@ def list_engines():
     print(f"  8. 3D-Animator / Three.js ({os.path.join(KIT_3D, 'render.mjs')})")
     print("\n[UNIVERSAL MODULAR COMBINER - 15 TROUBLE-FREE COMBOS]")
     print(f"  9. Combo Runner: {os.path.join(DOC_SCRIPTS, 'combo_runner.py')} (Guide: guides/COMBINATIONS.md)")
-    print("     Flags: --combo --shader=<look|timeline> --brush=<preset> --lemo=<slug> --post=<hdr|gtao|crt|none>\n")
+    print("     Flags: --combo --shader=<look|timeline> --brush=<preset> --lemo=<slug> --post=<hdr|gtao|crt|none>")
+    print(" 10. Auto-Init New 3D Project: python studio.py --init-3d <project_dir> (copies template + runs setup & doctor)\n")
 
 
 def list_styles():
@@ -120,6 +122,7 @@ def main():
     parser.add_argument("--sound-mode", type=str, choices=["openverse", "legacy_synth"], help="Switch default sound engine between openverse and legacy_synth")
     parser.add_argument("--auto-intake", type=str, help="Run Step 4 WhisperX sync intake on audio file")
     parser.add_argument("--render-board", action="store_true", help="PRIMARY: Render Evidence Board via board_engine.py")
+    parser.add_argument("--init-3d", type=str, help="Auto-create a new code-3d-video project folder and run npm run setup + npm run doctor")
     parser.add_argument("--script", type=str, default="", help="Custom project board_engine.py script path for --render-board")
     parser.add_argument("--render-3d", action="store_true", help="GAP FALLBACK: Render Three.js 3D scene via headless Chrome")
     parser.add_argument("--render-brush", action="store_true", help="GAP FALLBACK: Render p5.brush animation via headless Chrome")
@@ -131,6 +134,22 @@ def main():
 
     if args.sound_mode:
         set_sound_mode(args.sound_mode)
+        return
+
+    if args.init_3d:
+        tpl = os.path.join(CODE_3D_SKILL, "project-template")
+        dest = os.path.abspath(args.init_3d)
+        if not os.path.exists(dest):
+            print(f"[STUDIO] Copying code-3d-video template -> {dest}")
+            shutil.copytree(tpl, dest, ignore=shutil.ignore_patterns("node_modules", "build", "out", "__pycache__"))
+        else:
+            print(f"[STUDIO] Existing folder detected ({dest}); running setup + doctor...")
+        npm_bin = shutil.which("npm") or "npm"
+        print("[STUDIO] Running: npm run setup")
+        subprocess.run([npm_bin, "run", "setup"], cwd=dest, check=True)
+        print("[STUDIO] Running: npm run doctor")
+        subprocess.run([npm_bin, "run", "doctor"], cwd=dest, check=True)
+        print(f"[STUDIO] Project initialized and verified -> {dest}")
         return
 
     if args.list_engines:

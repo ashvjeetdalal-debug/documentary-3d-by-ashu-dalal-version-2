@@ -9,6 +9,7 @@ When authoring, editing, directing, or rendering films with this studio plugin, 
 1. **Never Compromise the Main Documentary System**:
    - The restored **Ashu Dalal Documentary (`kaz-documentary` `board_engine.py` + `style-guide.md`)** and **Original 3D Documentary Kit (`skills/code-3d-video/`)** form the **PRIMARY engine**.
    - Wherever real archival assets exist for spoken narration, render strictly using the main documentary grammar (one continuous camera, shallow 3D cards, beat recipes, red accents, contact-sheet QA). Never abandon it to improvise arbitrary scenes.
+   - **Auto-Bootstrap New 3D Folders**: Whenever creating a new `code-3d-video` project folder, the AI agent **MUST automatically** run `python studio.py --init-3d <project_dir>` (or copy `skills/code-3d-video/project-template/` and run `npm run setup` followed by `npm run doctor`) **before** authoring `src/scene.js` or rendering. Never ask the user to run setup manually or write scenes on an unverified folder.
 2. **`p5.brush`, `lemo-opuscar`, and `3D-Animator` Are Strictly for No-Asset Gaps**:
    - Do **NOT** use `p5.brush`, `lemo-opuscar`, or `3D-animator` (`kit/`) on segments that already have verified archival assets.
    - Use them **ONLY** when WhisperX + asset mapping shows a spoken word/sentence has **no archival asset** (*khali part*), and **ONLY** after consulting the operator via Step 5(1).

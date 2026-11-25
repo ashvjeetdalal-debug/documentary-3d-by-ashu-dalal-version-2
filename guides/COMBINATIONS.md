@@ -33,6 +33,8 @@ Is guide me woh **15 verified, trouble-free combinations** documented hain jo pl
 
 ### Group B — 3D Worlds (`3D-Animator` + `code-3d-video` + `p5.brush` + `Lemo`)
 
+> *Note (`code-3d-video` Auto-Setup)*: Naya project folder banate hi AI automatically `python studio.py --init-3d <project_dir>` (ya `npm run setup` + `npm run doctor`) pehle chalaye before editing `src/scene.js`.
+
 | # | Combination | Kab Use Karein | Kaise Use Karein (CLI / Script) | Kya Avoid Karein |
 |---|---|---|---|---|
 | **5** | **`code-3d-video` + `3D-Animator` Shaders** (`3d-code-shaders`) | Walking 3D characters (`character.js`) aur rooms ko `clay`, `paper`, `blueprint`, `toon`, `voxel`, ya `synth` look + HDR motion blur dene ke liye. | Project `scene.js` me `./kit/combo.js` ki `attachStyleToStage(stage, 'paper')` call karein (`render.mjs` auto `/plugin/` mount karta hai). | Text props (`documentMesh`) par `preserveReadable = true` zaroor set karein. |
