@@ -4,13 +4,14 @@ Cross-platform audio mixing and multiplexing script.
 Usage: python mix_and_mux.py video.mp4 voiceover.(mp3|wav) bed.wav out.mp4
 Ducks the sound bed under the voice, normalises to -14 LUFS, and encodes shareable H.264 (CRF 24).
 """
-import sys, subprocess
+import os, sys, subprocess
 
 if len(sys.argv) < 5:
     print("Usage: python mix_and_mux.py video.mp4 voiceover.(mp3|wav) bed.wav out.mp4")
     sys.exit(1)
 
 video, vo, bed, out = sys.argv[1:5]
+os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
 filter_complex = (
     "[1:a]aresample=48000,asplit=2[v1][v2];"
     "[2:a]aformat=channel_layouts=mono[b];"

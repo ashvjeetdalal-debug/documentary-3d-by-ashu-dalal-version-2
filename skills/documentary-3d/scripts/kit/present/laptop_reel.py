@@ -30,6 +30,7 @@ sy = int(sys.argv[4])
 sw = int(sys.argv[5])
 sh = int(sys.argv[6])
 out = sys.argv[7]
+os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
 motion = sys.argv[8] if len(sys.argv) > 8 and sys.argv[8] and sys.argv[8] != "-" else None
 overlay = sys.argv[9] if len(sys.argv) > 9 and sys.argv[9] else None
 
@@ -81,6 +82,9 @@ if motion and os.path.exists(motion):
     p3 = subprocess.Popen(p3_cmd, stdin=p2.stdout)
     p2.stdout.close()
     p3.communicate()
+    rc1, rc2, rc3 = p1.wait(), p2.wait(), p3.returncode
+    if rc1 != 0 or rc2 != 0 or rc3 != 0:
+        raise RuntimeError(f"laptop_reel pipeline failed (p1={rc1}, p2={rc2}, p3={rc3})")
 else:
     print("Encoding stationary laptop reel...")
     inputs = ["ffmpeg", "-v", "error", "-y", "-loop", "1", "-framerate", "30", "-i", photo, "-i", film]

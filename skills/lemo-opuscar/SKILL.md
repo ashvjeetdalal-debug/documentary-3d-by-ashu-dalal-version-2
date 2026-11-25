@@ -6,7 +6,7 @@ description: Direct and produce short cinematic films, explainers, and motion gr
 # Lemo-Opuscar — Code-Driven Film Studio (99 Styles)
 
 > [!NOTE]
-> **Version 3 Role Rule**: When producing a documentary under `documentary-3d-by-ashu-dalal-version-3`, follow `rules/AGENTS.md` first: **Main Ashu-Dalal Documentary (`board_engine.py` / `code-3d-video`)** handles all asset-backed narration. Use `lemo-opuscar` for **no-asset gap segments** (Step 5 operator choice) or `--combo` bridges (`lemo_bridge.js`, `post.js`, `crt.js`), unless explicitly asked standalone.
+> **Version 3 Role Rule**: When producing a documentary under `documentary-3d-by-ashu-dalal-version-3`, follow `rules/AGENTS.md` first: **Main Ashu-Dalal Documentary (`board_engine.py`)** handles all asset-backed narration. Use `lemo-opuscar` to make the overall video better (color palettes, GTAO/DOF `post.js`, VHS/CRT `crt.js`, `DIRECTOR.md` pacing, and `--combo` bridges with `3d-animator`), as well as for gap segments or standalone films.
 
 Direct and produce complete animated films, motion explainers, and visual essays entirely through code. No generative video hallucination or cloud rendering costs—every frame, camera move, subtitle, and audio cue is driven by deterministic code.
 
@@ -16,21 +16,21 @@ The studio library contains **99 curated styles** located in `${PLUGIN_ROOT}/ski
 
 ## 📖 Master Production Manuals
 
-Before generating any film, consult the core production guides in `guides/`:
+Before generating any film, consult the core production guides inside this folder:
 
-1. **[`guides/DIRECTOR.md`](file:///C:/editing%20automation/documentary-3d-by-ashu-dalal/guides/DIRECTOR.md)**:
+1. **[`DIRECTOR.md`](DIRECTOR.md)**:
    - Creative direction, emotional pacing, storyboards, and treatments (`TREATMENT.md`).
    - The **Music Grid**: Locking cuts and actions to rhythmic tempos (60–120 BPM).
    - Camera blocking: Pushes, pans, framing rules, and preventing visual fatigue.
    - Subtitle timing: Minimum 1.8s hold per line, never flashing.
 
-2. **[`guides/TECHNIQUE.md`](file:///C:/editing%20automation/documentary-3d-by-ashu-dalal/guides/TECHNIQUE.md)**:
+2. **[`TECHNIQUE.md`](TECHNIQUE.md)**:
    - Frame-by-frame offline rendering pipeline via headless Chrome.
    - Text-to-speech voice generation and word-level timestamp alignment.
    - Background score assembly and procedural Foley sound design.
    - Broadcast audio mixing (-14 LUFS) and FFmpeg packaging.
 
-3. **[`guides/MY-STYLES.md`](file:///C:/editing%20automation/documentary-3d-by-ashu-dalal/guides/MY-STYLES.md)**:
+3. **[`MY-STYLES.md`](MY-STYLES.md)**:
    - Designing and saving custom visual styles from scratch.
 
 ---
@@ -48,11 +48,13 @@ Before generating any film, consult the core production guides in `guides/`:
 Each style folder in `styles/<style_name>/` contains:
 - `STYLE.md`: Design specifications, color palettes, camera motion, typography, and shader rules.
 - `style.json`: Metadata, tags, supported aspect ratios.
-- `demo/`: Complete working reference code (`index.html`, `main.js` / `film.js`, `mix.py`).
+- `demo/`: Working reference implementation (`index.html`, plus style-specific JS/Python render & audio scripts such as `film.js` / `main.js` and `mix.py`).
 
 ---
 
 ## 🎬 5-Step Production Workflow
+
+> *Note:* When working inside a documentary workflow, follow `rules/AGENTS.md` (`plan.md`, `board_engine.py`, `assets/sfx/` + `openverse_sfx.py`); use the standalone steps below when authoring standalone Lemo films.
 
 1. **Intake & Style Selection**: Select a style from `styles/` that matches the topic's mood and audience.
 2. **Treatment & Script**: Write a `TREATMENT.md` defining the 3-act emotional arc, beats, voiceover lines, and sound cues.

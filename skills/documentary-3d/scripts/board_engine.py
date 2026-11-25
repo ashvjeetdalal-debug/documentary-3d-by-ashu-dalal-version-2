@@ -351,6 +351,9 @@ def render(frames, out):
     yy, xx = np.ogrid[:H, :W]; vig = 1 - .45*np.clip(((xx-W/2)/(W*.62))**2 + ((yy-H/2)/(H*.62))**2, 0, 1)
     vig = vig[..., None].astype(np.float32)
     grains = [rng.normal(0, 7, (H, W, 1)).astype(np.float32) for _ in range(6)]
+    out_dir = os.path.dirname(os.path.abspath(out))
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
     ff = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
                            "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", out], stdin=subprocess.PIPE)
     for fi in frames:
@@ -387,9 +390,17 @@ def render(frames, out):
         f = f * vig + grains[fi % 6]
         if t < .5: f *= t/.5
         ff.stdin.write(np.clip(f, 0, 255).astype(np.uint8).tobytes())
-    ff.stdin.close(); ff.wait()
+    ff.stdin.close()
+    rc = ff.wait()
+    if rc != 0:
+        raise RuntimeError(f"board_engine ffmpeg failed with exit code {rc}")
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python board_engine.py stills <t1,t2,...> | python board_engine.py full <start_frame> <end_frame> <out.mp4>")
+        sys.exit(1)
+    if not os.path.exists(A):
+        raise FileNotFoundError(f"Template assets directory not found: {A}. Copy board_engine.py to your project folder and update A / IMG paths.")
     mode = sys.argv[1]
     if mode == "stills":
         ts = [float(x) for x in sys.argv[2].split(",")]

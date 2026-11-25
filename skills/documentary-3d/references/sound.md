@@ -1,5 +1,8 @@
 # Sound
 
+> [!NOTE]
+> **Version 3 Audio Policy (`rules/AGENTS.md`):** Always resolve documentary SFX from the pre-bundled CC0 pack (`assets/sfx/`) or fetch real CC/PD audio via `openverse_sfx.py` (`python studio.py --fetch-sfx=... --fetch-music=...`). Avoid synthesizing SFX or generating AI SFX unless explicitly requested; master to **-14 LUFS / -1.5 dBTP** via `kit/mix.py` or `mix_and_mux.py`.
+
 The voice sets the clock, the music gives the bed, and the effects make every action real. `kit/mix.py` builds the mix from `sound/cues.json` and levels it.
 
 ## 1. Voice

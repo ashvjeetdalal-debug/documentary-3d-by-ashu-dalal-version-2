@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """
-Documentary 3D by Ashu Dalal (Version 3) - Multi-Source Real Audio & SFX Engine
-Searches, downloads, normalizes (48 kHz stereo WAV via ffmpeg), and logs attributions across:
-  1. Openverse Audio API (keyless CC0/CC-BY: Freesound previews, Jamendo, Wikimedia)
-  2. Wikimedia Commons Audio (keyless authentic .ogg/.wav/.mp3 Foley & sirens)
-  3. Internet Archive Audio (keyless public-domain historical/SFX recordings)
-  4. Freesound API v2 (auto-enabled when FREESOUND_API_KEY env var is set)
-  5. Direct --from-urls found during internet research
+Documentary 3D by Ashu Dalal (Version 3) - Bundled Documentary SFX + Multi-Source Audio Engine
+1. Checks the pre-bundled verified CC0/CC-BY Documentary SFX Pack (`assets/sfx/*.wav`, 23 researched cues) FIRST
+   for instant, glitch-free, zero-latency documentary sound design.
+2. For custom SFX or music beds (or when --online-only is passed), searches, downloads, normalizes
+   (48 kHz stereo WAV via ffmpeg), and logs attributions across:
+     - Openverse Audio API (keyless CC0/CC-BY: Freesound previews, Jamendo, Wikimedia)
+     - Wikimedia Commons Audio (keyless authentic .ogg/.wav/.mp3 Foley & sirens)
+     - Internet Archive Audio (keyless public-domain historical/SFX recordings)
+     - Freesound API v2 (auto-enabled when FREESOUND_API_KEY env var is set)
+     - Direct --from-urls found during internet research
 
 Replaces synthetic numpy sound generation by default while keeping sound_bed.py / gen_sfx.py preserved & silenced.
 """
@@ -14,28 +17,96 @@ Replaces synthetic numpy sound generation by default while keeping sound_bed.py 
 import os
 import sys
 import json
-import re
+import shutil
 import subprocess
 import urllib.request
 import urllib.parse
 import argparse
 
+SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
+PLUGIN_ROOT = os.path.abspath(os.path.join(SCRIPTS_DIR, "..", "..", ".."))
+BUNDLED_SFX_DIR = os.path.join(PLUGIN_ROOT, "assets", "sfx")
+BUNDLED_CATALOG = os.path.join(BUNDLED_SFX_DIR, "sfx_catalog.json")
+
 API_BASE = "https://api.openverse.org/v1/audio/"
 USER_AGENT = "Documentary3D-AshuDalal/3.0 (Multi-Source Audio Client; contact@antigravity.ai)"
 
-# Curated search terms tailored for documentary SFX cues
+# Curated search terms derived from investigative/YouTube documentary sound-design research
 DEFAULT_SFX_QUERIES = {
-    "whoosh": "whoosh transition swish",
-    "paper": "paper slide rustle page",
+    "sub_drop": "sub bass drop impact",
+    "braam": "cinematic braam horn boom",
+    "thud": "heavy door thud impact",
     "stamp": "heavy rubber stamp thud",
+    "riser": "tension riser suspense swell",
+    "reverse_cymbal": "reverse cymbal swell",
+    "whoosh": "whoosh transition swish",
+    "whoosh_deep": "deep whoosh cinematic pass",
+    "paper": "paper slide rustle page",
+    "page_flip": "book page turn flip",
+    "typewriter": "typewriter mechanical keys",
+    "typewriter_ding": "typewriter bell ding",
+    "marker": "marker pen stroke paper",
+    "pin": "thumbtack pin click",
+    "shutter": "camera shutter mechanical click",
+    "projector": "film projector 16mm reel clatter",
+    "glitch": "digital static radio glitch",
+    "static_burst": "tv vhs static noise burst",
+    "clock_tick": "clock ticking suspense",
+    "heartbeat": "heartbeat pulse thump",
+    "radar_ping": "sonar radar ping",
+    "ui_click": "digital interface click blip",
+    "drone_dark": "dark ambient tension drone",
+    # Aliases mapped cleanly
     "typing": "typewriter mechanical keys",
     "click": "camera shutter mechanical click",
-    "thud": "deep cinematic impact boom",
-    "riser": "tension riser suspense swell",
-    "glitch": "digital static radio glitch",
-    "footstep": "footsteps concrete corridor",
-    "ding": "subtle bell notification chime"
+    "boom": "sub bass drop impact",
+    "ding": "typewriter bell ding",
+    "pop": "digital interface click blip",
+    "footstep": "footsteps concrete corridor"
 }
+
+BUNDLED_ALIASES = {
+    "typing": "typewriter",
+    "click": "shutter",
+    "boom": "sub_drop",
+    "ding": "typewriter_ding",
+    "pop": "ui_click",
+    "drone": "drone_dark",
+    "music_drone": "drone_dark",
+    "vhs": "static_burst",
+    "swatch": "paper",
+    "highlight": "marker"
+}
+
+
+def load_bundled_catalog():
+    if os.path.exists(BUNDLED_CATALOG):
+        try:
+            with open(BUNDLED_CATALOG, encoding="utf-8-sig") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return []
+
+
+def list_bundled_sfx():
+    cat = load_bundled_catalog()
+    print(f"\n=== BUNDLED DOCUMENTARY SFX LIBRARY ({BUNDLED_SFX_DIR}) ===")
+    if not cat:
+        print("  (No catalog found; run online fetch or check assets/sfx/)")
+        return
+    for item in cat:
+        print(f"  - {item['cue']:16} [{item['category']:10}] ({item['duration_sec']:4.2f}s, {item['license']}) : {item['use']}")
+    print("\nAliases supported automatically: typing->typewriter, click->shutter, boom->sub_drop, ding->typewriter_ding, pop->ui_click")
+    print("Usage: python studio.py --fetch-sfx='sub_drop,riser,whoosh,paper,typewriter,shutter,stamp' --out=sound\n")
+
+
+def resolve_bundled_cue(kind):
+    norm = BUNDLED_ALIASES.get(kind.lower().strip(), kind.lower().strip())
+    cand = os.path.join(BUNDLED_SFX_DIR, f"{norm}.wav")
+    if os.path.exists(cand) and os.path.getsize(cand) > 1024:
+        return norm, cand
+    return None, None
 
 
 def _http_get_json(url, timeout=25, headers=None):
@@ -58,7 +129,6 @@ def search_openverse_audio(query, category=None, license_filter="cc0,pdm,by", pa
     try:
         data = _http_get_json(API_BASE + "?" + urllib.parse.urlencode(params))
         if not data.get("results") and "category" in params:
-            # Openverse audio items often omit category tags; retry unfiltered before giving up
             params.pop("category", None)
             data = _http_get_json(API_BASE + "?" + urllib.parse.urlencode(params))
     except Exception as e:
@@ -130,7 +200,10 @@ def search_wikimedia_audio(query, limit=4):
 def search_archive_audio(query, limit=3):
     """Search Internet Archive title-filtered public audio items."""
     try:
-        q_tok = query.strip().split()[0]
+        tokens = query.strip().split()
+        if not tokens:
+            return []
+        q_tok = tokens[0]
         sdata = _http_get_json("https://archive.org/advancedsearch.php?" + urllib.parse.urlencode({
             "q": f'title:("{q_tok}") AND mediatype:audio',
             "fl[]": "identifier,title,creator", "rows": str(limit), "page": "1", "output": "json"
@@ -233,6 +306,10 @@ def download_and_normalize_wav(url, out_wav, max_seconds=None):
             f.write(resp.read())
     except Exception as e:
         print(f"[AUDIO_ENGINE] Download failed ({url}): {e}", file=sys.stderr)
+        try:
+            os.remove(tmp_raw)
+        except OSError:
+            pass
         return False
 
     cmd = ["ffmpeg", "-y", "-v", "error", "-i", tmp_raw]
@@ -253,12 +330,13 @@ def download_and_normalize_wav(url, out_wav, max_seconds=None):
     return True
 
 
-def fetch_sfx_pack(kinds, out_dir, music_query=None, sources="all", extra_urls=None):
+def fetch_sfx_pack(kinds, out_dir, music_query=None, sources="all", extra_urls=None, online_only=False):
     """
-    Download a real multi-source CC/PD SFX pack + optional music bed.
-    Writes normalized 48 kHz WAVs into `out_dir` and records attribution in `openverse_attribution.json`.
+    Resolve documentary SFX cues from pre-bundled CC0 pack first (unless online_only=True),
+    then fetch missing/custom cues + music bed from multi-source CC/PD APIs.
     """
     os.makedirs(out_dir, exist_ok=True)
+    catalog_by_cue = {item["cue"]: item for item in load_bundled_catalog()}
     attributions = []
     fetched = {}
 
@@ -271,12 +349,30 @@ def fetch_sfx_pack(kinds, out_dir, music_query=None, sources="all", extra_urls=N
                 print(f"  -> Ready: custom_audio_{idx}.wav (from direct URL)")
 
     for kind in kinds:
+        safe_stem = re.sub(r'[\\/:*?"<>|]+', '_', kind).strip("._ ") or "sfx_cue"
+        out_wav = os.path.join(out_dir, f"{safe_stem}.wav")
+        if not online_only:
+            bundled_key, bundled_path = resolve_bundled_cue(kind)
+            if bundled_path:
+                shutil.copy2(bundled_path, out_wav)
+                fetched[kind] = out_wav
+                meta = catalog_by_cue.get(bundled_key, {})
+                attributions.append({
+                    "role": f"sfx:{kind}",
+                    "title": meta.get("title", bundled_key),
+                    "creator": meta.get("creator", "Openverse CC0"),
+                    "license": meta.get("license", "cc0"),
+                    "source": f"bundled:{meta.get('source', 'assets/sfx')}",
+                    "url": meta.get("url", bundled_path)
+                })
+                print(f"  -> Bundled CC0 Ready: {kind}.wav (from assets/sfx/{bundled_key}.wav)")
+                continue
+
         query = DEFAULT_SFX_QUERIES.get(kind, kind)
-        max_ms = 12000 if kind not in ("riser", "typing") else 20000
+        max_ms = 12000 if kind not in ("riser", "typing", "typewriter", "projector", "drone_dark") else 20000
         print(f"[AUDIO_ENGINE] Multi-source search ({sources}) for '{kind}' ('{query}')...")
         candidates = search_multi_source_audio(query, category=None, sources=sources, max_duration_ms=max_ms)
 
-        out_wav = os.path.join(out_dir, f"{kind}.wav")
         ok = False
         for c in candidates[:6]:
             if download_and_normalize_wav(c["url"], out_wav, max_seconds=10):
@@ -308,15 +404,21 @@ def fetch_sfx_pack(kinds, out_dir, music_query=None, sources="all", extra_urls=N
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Multi-Source CC/PD Audio & SFX Engine (Openverse, Wikimedia, Archive, Freesound v2)")
+    parser = argparse.ArgumentParser(description="Bundled Documentary SFX + Multi-Source CC/PD Audio Engine")
+    parser.add_argument("--list", action="store_true", help="List all 23 pre-bundled CC0 documentary SFX cues")
     parser.add_argument("--search", type=str, help="Search multi-source audio and print matches without downloading")
-    parser.add_argument("--sfx", type=str, help="Comma-separated SFX cues/queries to fetch (e.g. whoosh,paper,stamp,typing)")
+    parser.add_argument("--sfx", type=str, help="Comma-separated SFX cues/queries to fetch (e.g. sub_drop,riser,whoosh,paper,typewriter,shutter,stamp)")
     parser.add_argument("--music", type=str, help="Ambient music / tension bed search query")
     parser.add_argument("--sources", type=str, default="all", help="all or comma list: openverse,wikimedia,archive,freesound")
     parser.add_argument("--from-urls", type=str, default="", help="Comma-separated direct audio URLs from research")
+    parser.add_argument("--online-only", action="store_true", help="Bypass bundled assets/sfx/ and fetch fresh from online APIs")
     parser.add_argument("--category", type=str, default="all", help="Openverse category (all, sound_effects, music)")
     parser.add_argument("--out", type=str, default="sound", help="Output directory for normalized 48kHz WAV files")
     args = parser.parse_args()
+
+    if args.list:
+        list_bundled_sfx()
+        return
 
     if args.search:
         cat = None if args.category == "all" else args.category
@@ -330,7 +432,7 @@ def main():
         parser.print_help()
         return
 
-    fetch_sfx_pack(kinds, args.out, music_query=args.music, sources=args.sources, extra_urls=urls)
+    fetch_sfx_pack(kinds, args.out, music_query=args.music, sources=args.sources, extra_urls=urls, online_only=args.online_only)
 
 
 if __name__ == "__main__":

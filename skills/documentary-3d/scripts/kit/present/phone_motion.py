@@ -16,6 +16,8 @@ start = float(sys.argv[3]) if len(sys.argv) > 3 else 0.0
 dur = float(sys.argv[4]) if len(sys.argv) > 4 else 30.0
 probe = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height:stream_side_data=rotation',
                         '-of', 'csv=p=0', src], capture_output=True, text=True).stdout.split()
+if not probe:
+    raise RuntimeError(f"ffprobe failed to read video dimensions for: {src}")
 w0, h0 = [int(v) for v in probe[0].split(',')[:2]]
 W = 480; H = int(round(W * h0 / w0 / 2)) * 2           # analyse small: fast, and shake is large-scale anyway
 BOXES = [tuple(float(v) for v in b.split(',')) for b in os.environ.get('BOXES', '0.04,0.62,0.47,0.95;0.53,0.62,0.96,0.95').split(';')]
@@ -55,7 +57,10 @@ while True:
         x += (s[0][0] + s[1][0]) / 2 / W; y += (s[0][1] + s[1][1]) / 2 / W; rot += (s[1][1] - s[0][1]) / span
     rows.append((i, x, y, rot)); prev = cur; i += 1
 p.wait()
-with open(out, 'w') as f:
+if not rows:
+    raise RuntimeError(f"No frames decoded from: {src}")
+os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
+with open(out, 'w', encoding='utf-8') as f:
     f.write('frame,x,y,rot\n')
     for r in rows: f.write('%d,%.6f,%.6f,%.7f\n' % r)
 a = np.array(rows)

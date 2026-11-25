@@ -261,12 +261,14 @@ def download_and_verify_asset(url, dest_path, min_width=400, min_height=300):
         with Image.open(dest_path) as im:
             if im.mode not in ("RGB", "RGBA"):
                 im = im.convert("RGB")
-            # Normalize WebP/non-JPEG safely to PNG/JPG
+            # Normalize WebP and RGBA-into-JPEG safely
             if dest_path.lower().endswith(".webp"):
                 new_path = dest_path[:-5] + ".jpg"
                 im.convert("RGB").save(new_path, quality=95)
                 os.remove(dest_path)
                 dest_path = new_path
+            elif dest_path.lower().endswith((".jpg", ".jpeg")) and im.mode != "RGB":
+                im.convert("RGB").save(dest_path, quality=95)
             else:
                 im.save(dest_path)
 
@@ -394,7 +396,7 @@ if __name__ == "__main__":
     parser.add_argument("--query", type=str, required=True, help="Comma-separated search keywords")
     parser.add_argument("--out", type=str, default="assets", help="Destination directory")
     parser.add_argument("--max", type=int, default=8, help="Maximum assets to download")
-    parser.add_argument("--sources", type=str, default="all", help="all or comma list: wikimedia,wikipedia,openverse,archive,reddit")
+    parser.add_argument("--sources", type=str, default="all", help="all or comma list: wikimedia,wikipedia,openverse,archive,loc,nasa,reddit")
     parser.add_argument("--from-urls", type=str, default="", help="Comma-separated direct image URLs found during web/social research")
     parser.add_argument("--tags", type=str, default="", help="Extra bilingual/phonetic alias tags (e.g. iran,rahn,stuxnet,stucks)")
     args = parser.parse_args()

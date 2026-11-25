@@ -5,7 +5,7 @@ Searches and downloads verified real 3D geometry for gap scenes when primitive s
   1. Poly Haven Public 3D Models API (500+ CC0 photogrammetry & studio props with 1k/2k glTF + .bin + textures)
   2. Direct --from-urls (.glb or .gltf from Sketchfab CC0/CC-BY, NASA 3D, Smithsonian 3D, Kenney, Quaternius)
 
-Validates glTF JSON / glb binary magic header (b'glTF') and writes models_manifest.json for combo_film.js & code-3d-video.
+Validates glTF JSON / glb binary magic header (b'glTF') and writes models_manifest.json for combo_film.js & 3d-animator.
 """
 
 import os
@@ -98,14 +98,15 @@ def download_polyhaven_gltf(asset_id, dest_dir, resolution="1k"):
     if not gltf_url:
         return None
 
-    model_folder = os.path.join(dest_dir, asset_id)
+    model_folder = os.path.abspath(os.path.join(dest_dir, asset_id))
     os.makedirs(model_folder, exist_ok=True)
     gltf_name = os.path.basename(urllib.parse.urlparse(gltf_url).path) or f"{asset_id}.gltf"
     gltf_path = os.path.join(model_folder, gltf_name)
 
     try:
         _download_binary(gltf_url, gltf_path)
-        parsed = json.load(open(gltf_path, encoding="utf-8"))
+        with open(gltf_path, encoding="utf-8-sig") as f:
+            parsed = json.load(f)
         if "asset" not in parsed:
             raise ValueError("Invalid glTF JSON (missing 'asset' key)")
 
@@ -114,8 +115,8 @@ def download_polyhaven_gltf(asset_id, dest_dir, resolution="1k"):
             inc_url = (inc_meta or {}).get("url")
             if not inc_url:
                 continue
-            target_inc = os.path.normpath(os.path.join(model_folder, rel_path))
-            if not target_inc.startswith(os.path.abspath(model_folder)):
+            target_inc = os.path.abspath(os.path.join(model_folder, rel_path))
+            if os.path.commonpath([model_folder, target_inc]) != model_folder:
                 continue
             _download_binary(inc_url, target_inc)
 
@@ -154,12 +155,14 @@ def download_direct_model(url, dest_dir, stem_hint="custom_model"):
 
     try:
         _download_binary(url, out_path)
-        raw = open(out_path, "rb").read(64)
+        with open(out_path, "rb") as f:
+            raw = f.read(64)
         if ext == ".glb":
             if raw[:4] != b"glTF":
                 raise ValueError("Invalid GLB magic header (not a binary glTF file)")
         else:
-            parsed = json.load(open(out_path, encoding="utf-8"))
+            with open(out_path, encoding="utf-8-sig") as f:
+                parsed = json.load(f)
             if "asset" not in parsed:
                 raise ValueError("Invalid glTF JSON")
         size_kb = os.path.getsize(out_path) / 1024

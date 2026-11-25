@@ -17,7 +17,9 @@ S = float(sys.argv[6]) if len(sys.argv) > 6 else 1.10
 RG = float(sys.argv[7]) if len(sys.argv) > 7 else 0.6
 DK = float(sys.argv[8]) if len(sys.argv) > 8 else 0.4
 
-m = np.loadtxt(csv, delimiter=',', skiprows=1)
+m = np.atleast_2d(np.loadtxt(csv, delimiter=',', skiprows=1))
+if m.size == 0 or m.shape[1] < 4:
+    raise ValueError(f"Motion CSV must have at least 1 data row and 4 columns: {csv}")
 x, y, r = m[:, 1] * W, m[:, 2] * W, m[:, 3] * RG
 
 def smooth(a, sigma=90):

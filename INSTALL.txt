@@ -23,39 +23,31 @@ Dependencies Installation:
    # Optional (for advanced voice & music tools from lemo-opuscar):
    pip install -r skills/lemo-opuscar/requirements.txt
 
-2. 3D Renderer (Puppeteer + Three.js):
+2. 3D-Animator & Combo Renderer (Puppeteer + Three.js):
    cd skills/documentary-3d/scripts/kit
    npm install
 
-3. p5.brush Rendering Kit:
-   cd skills/p5-brush/kit
-   npm install
-
-   (Note: If you have Google Chrome already installed on Windows and want to avoid downloading Chromium:
+   (Note: `skills/3d-animator/kit/render.mjs` automatically shares these modules.
+    If you have Google Chrome installed on Windows and want to skip Chromium download:
     set PUPPETEER_SKIP_DOWNLOAD=1
     npm install
     set CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe)
 
-4. New `code-3d-video` Project Folder (AI runs this automatically on new project creation):
-   python studio.py --init-3d my_3d_project
-   # Copies template, installs three + playwright + Chromium (`npm run setup`), and verifies WebGL (`npm run doctor`)
-
 Quick Smoke Tests:
 ------------------
-1. List all engines & 15 verified modular combinations:
+1. List 3-engine architecture, bundled documentary SFX & 10 glitch-free combinations:
    python studio.py --list-engines
    python studio.py --list-combos
+   python studio.py --list-sfx
 
-2. Test 3D procedural renderer:
+2. Test 3D-Animator procedural renderer:
    python studio.py --render-3d --style=blueprint --stills=2.5
 
-3. Test p5.brush natural media renderer:
-   python studio.py --render-brush --stills=2.5
+3. Test Glitch-Free 3D-Animator + Lemo-Opuscar Combo renderer (GTAO & CRT):
+   python studio.py --combo --shader=paper --lemo=dark-documentary --post=gtao --stills=1.5 --out=stills_gtao
+   python studio.py --combo --shader=blueprint --lemo=briefing-board --post=crt --stills=1.5 --out=stills_crt
 
-4. Test 4-in-1 Modular Combo renderer:
-   python studio.py --combo --shader=paper --brush=watercolor --lemo=dark-documentary --post=gtao --stills=1.5
-
-5. Test Evidence Board (in a project copy with your real assets/ paths):
+4. Test Evidence Board (in a project copy with your real assets/ paths):
    python studio.py --render-board --script=my_project/board_engine.py --stills=2,5
 
 You are ready to create world-class code-driven films!

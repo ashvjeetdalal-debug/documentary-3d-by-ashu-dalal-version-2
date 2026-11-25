@@ -28,8 +28,23 @@ except ImportError:
         @staticmethod
         def warpAffine(arr, M, dsize, borderMode=0):
             M3 = np.vstack([np.asarray(M, dtype=np.float64), [0.0, 0.0, 1.0]])
+            if borderMode == 4:
+                pad = 16
+                padded = np.pad(arr, ((pad, pad), (pad, pad), (0, 0)) if arr.ndim == 3 else ((pad, pad), (pad, pad)), mode='reflect')
+                Mp = M3.copy()
+                Mp[0, 2] += pad; Mp[1, 2] += pad
+                T_unpad = np.array([[1.0, 0.0, -pad], [0.0, 1.0, -pad], [0.0, 0.0, 1.0]])
+                inv = np.linalg.inv(M3 @ T_unpad)[:2].flatten()
+                return np.array(Image.fromarray(padded).transform(dsize, Image.AFFINE, tuple(inv), resample=Image.BILINEAR))
             inv = np.linalg.inv(M3)[:2].flatten()
             return np.array(Image.fromarray(arr).transform(dsize, Image.AFFINE, tuple(inv), resample=Image.BILINEAR))
+
+        @staticmethod
+        def imwrite(path, arr):
+            out_dir = os.path.dirname(os.path.abspath(path))
+            if out_dir:
+                os.makedirs(out_dir, exist_ok=True)
+            Image.fromarray(arr[..., ::-1]).save(path)
 
         @staticmethod
         def GaussianBlur(arr, ksize, sigmaX):
@@ -289,6 +304,9 @@ def frame(fi):
 
 if __name__ == "__main__":
     import sys
+    if len(sys.argv) < 2:
+        print("Usage: python vintage_engine.py stills <t1,t2,...> | python vintage_engine.py full")
+        sys.exit(1)
     if sys.argv[1] == "stills":
         for s in sys.argv[2].split(","):
             cv2.imwrite(f"v_{s}.jpg", frame(int(float(s)*FPS)))
@@ -296,4 +314,7 @@ if __name__ == "__main__":
         p = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W}x{H}", "-r", "30", "-i", "-",
                               "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", "vintage.mp4"], stdin=subprocess.PIPE)
         for fi in range(1896, 2149): p.stdin.write(frame(fi).tobytes())
-        p.stdin.close(); p.wait()
+        p.stdin.close()
+        rc = p.wait()
+        if rc != 0:
+            raise RuntimeError(f"vintage_engine ffmpeg failed with exit code {rc}")

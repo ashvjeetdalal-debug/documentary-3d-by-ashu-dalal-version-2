@@ -57,19 +57,38 @@ export async function loadLemoStyle(rawSlug) {
   let colors = [];
   let mdText = '';
 
+  let loadedViaMeta = false;
   try {
-    const r = await fetch(`/plugin/skills/lemo-opuscar/styles/${encodeURIComponent(slug)}/style.json`);
-    if (r.ok) meta = await r.json();
-  } catch {}
-
-  try {
-    const r = await fetch(`/plugin/skills/lemo-opuscar/styles/${encodeURIComponent(slug)}/STYLE.md`);
+    const r = await fetch(`/lemo-meta/${encodeURIComponent(slug)}`);
     if (r.ok) {
-      mdText = await r.text();
-      const hexMatches = mdText.match(/#[0-9a-fA-F]{6}\b/g) || [];
-      colors = [...new Set(hexMatches)];
+      const payload = await r.json();
+      loadedViaMeta = true;
+      if (payload.exists) {
+        if (payload.meta) meta = payload.meta;
+        if (payload.mdText) {
+          mdText = payload.mdText;
+          const hexMatches = mdText.match(/#[0-9a-fA-F]{6}\b/g) || [];
+          colors = [...new Set(hexMatches)];
+        }
+      }
     }
   } catch {}
+
+  if (!loadedViaMeta) {
+    try {
+      const r = await fetch(`/plugin/skills/lemo-opuscar/styles/${encodeURIComponent(slug)}/style.json`);
+      if (r.ok) meta = await r.json();
+    } catch {}
+
+    try {
+      const r = await fetch(`/plugin/skills/lemo-opuscar/styles/${encodeURIComponent(slug)}/STYLE.md`);
+      if (r.ok) {
+        mdText = await r.text();
+        const hexMatches = mdText.match(/#[0-9a-fA-F]{6}\b/g) || [];
+        colors = [...new Set(hexMatches)];
+      }
+    } catch {}
+  }
 
   const sortedByLum = [...colors].sort((a, b) => hexLum(a) - hexLum(b));
   const looksLight = curated

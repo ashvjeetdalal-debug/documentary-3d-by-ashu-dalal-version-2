@@ -151,15 +151,16 @@ def build_subtitles_and_cues(timeline):
     for i, seg in enumerate(segments):
         start = seg["start"]
         end = seg["end"]
-        # Enforce minimum hold time
+        next_start = segments[i + 1]["start"] if (i + 1 < len(segments)) else timeline["duration"]
         if (end - start) < MIN_HOLD:
-            next_start = segments[i + 1]["start"] if (i + 1 < len(segments)) else timeline["duration"]
-            end = min(start + MIN_HOLD, next_start - 0.05)
+            end = min(start + MIN_HOLD, max(end, next_start - 0.05))
+        if i + 1 < len(segments) and next_start > start + 0.1:
+            end = min(end, next_start - 0.02)
 
         subtitles.append({
             "index": i + 1,
             "start": round(start, 3),
-            "end": round(max(end, start + 0.5), 3),
+            "end": round(max(end, start + 0.25), 3),
             "text": seg["text"]
         })
 
@@ -186,6 +187,9 @@ def main():
     args = parser.parse_args()
 
     timeline = align_audio_whisper(args.audio, model_size=args.model, language=args.language)
+    out_dir = os.path.dirname(os.path.abspath(args.out))
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(timeline, f, indent=2, ensure_ascii=False)
 

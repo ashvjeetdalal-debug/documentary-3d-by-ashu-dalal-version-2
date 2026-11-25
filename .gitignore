@@ -20,8 +20,8 @@ __pycache__/
 /stills/
 skills/documentary-3d/scripts/kit/stills/
 skills/documentary-3d/scripts/kit/out/
-skills/p5-brush/kit/stills/
-skills/p5-brush/kit/out/
+skills/3d-animator/kit/stills/
+skills/3d-animator/kit/out/
 
 # Big video/audio exports
 *.mp4

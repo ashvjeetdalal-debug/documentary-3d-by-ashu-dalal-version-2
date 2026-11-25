@@ -16,12 +16,20 @@ def _is_legacy_enabled():
     cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sound_config.json")
     if os.path.exists(cfg_path):
         try:
-            return json.load(open(cfg_path, encoding="utf-8")).get("active_engine") == "legacy_synth"
+            with open(cfg_path, encoding="utf-8-sig") as f:
+                return json.load(f).get("active_engine") == "legacy_synth"
         except Exception:
             pass
     return False
 
-c = json.load(open(sys.argv[1])); sr = 48000; D = c["duration"]; n = int(sr*D)
+if len(sys.argv) < 3:
+    print("Usage: python sound_bed.py cues.json out.wav [--force-legacy]")
+    sys.exit(1)
+
+with open(sys.argv[1], encoding="utf-8-sig") as f:
+    c = json.load(f)
+sr = 48000; D = c["duration"]; n = int(sr*D)
+os.makedirs(os.path.dirname(os.path.abspath(sys.argv[2])), exist_ok=True)
 
 if not _is_legacy_enabled():
     print("[sound_bed.py] Legacy synthetic sound is SILENCED by default (Openverse is active). Writing silent track; pass --force-legacy or switch sound_config.json to 'legacy_synth' to re-enable.")

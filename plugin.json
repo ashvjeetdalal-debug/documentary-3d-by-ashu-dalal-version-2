@@ -2,13 +2,11 @@
   "name": "documentary-3d-by-ashu-dalal-version-3",
   "displayName": "Documentary 3D by Ashu Dalal Version 3",
   "version": "3.0.0",
-  "description": "Master code-driven documentary suite by Ashu Dalal. Uses the restored Ashu-Dalal Evidence-Board & Code-3D-Video Documentary backbone as the primary engine, WhisperX for word-level alignment, verified real internet archival assets (zero fake assets), Openverse API for real SFX & music beds (legacy synth silenced but preserved), and p5.brush / lemo-opuscar / 3D-animator exclusively for missing-asset gap segments.",
+  "description": "Clean 3-engine documentary studio by Ashu Dalal: Ashu Dalal Evidence-Board & Vintage 2D as the primary system, combined with 3D-Animator (primarily for no-asset gaps or flexible standalone 3D scenes) and Lemo-Opuscar (for overall visual polish, 99 styles, GTAO/DOF & CRT), powered by WhisperX sync, real internet archival assets, and a bundled CC0 documentary SFX + Openverse audio engine.",
   "logo": "assets/logo.svg",
   "suggestedPrompts": [
     "Start the 5-step Ashu Dalal documentary workflow for a new historical topic",
     "Sync my voiceover with WhisperX, download verified internet archival assets, and identify no-asset gaps",
-    "Fill no-asset gap segments using p5.brush, Lemo-Opuscar, or 3D-Animator with my chosen style",
-    "Fetch real CC-licensed SFX and ambient music from Openverse and mix at -14 LUFS",
-    "Build a continuous-camera Evidence Board documentary with contact-sheet QA and 9:16 export"
+    "Fill no-asset gaps or build a 3D scene using 3D-Animator + Lemo-Opuscar glitch-free combinations"
   ]
 }

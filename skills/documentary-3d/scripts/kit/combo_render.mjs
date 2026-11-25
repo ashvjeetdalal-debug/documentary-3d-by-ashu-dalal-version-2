@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Universal Modular Combo Renderer (Version 3)
+ * Glitch-Free 3D-Animator + Lemo-Opuscar Modular Combo Renderer (Version 3)
  * Serves plugin root cleanly over HTTP (zero 404/CORS path errors) so 3D-Animator,
- * p5.brush, Lemo-Opuscar styles/post-FX, and archival photos work seamlessly together.
+ * Lemo-Opuscar styles/post-FX, .glb/.gltf models, and archival photos work seamlessly together.
  */
 import http from 'node:http';
 import fs from 'node:fs';
@@ -14,7 +14,6 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const KIT_DIR = __dirname;
 const PLUGIN_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
-const WORKSPACE_ROOT = path.resolve(PLUGIN_ROOT, '..');
 
 const args = Object.fromEntries(
   process.argv.slice(2).map((a) => {
@@ -24,15 +23,13 @@ const args = Object.fromEntries(
   })
 );
 
-// Locate puppeteer / puppeteer-core and three across kit, workspace, or fallback reel node_modules
 const req = createRequire(import.meta.url);
 function findNodeModule(modName) {
   const candidates = [
     path.join(KIT_DIR, 'node_modules', modName),
     path.join(PLUGIN_ROOT, 'node_modules', modName),
-    path.join(WORKSPACE_ROOT, 'stuxnet_reel_9x16', 'node_modules', modName),
     path.join(PLUGIN_ROOT, 'skills', 'lemo-opuscar', 'node_modules', modName),
-    path.join(PLUGIN_ROOT, 'skills', 'p5-brush', 'kit', 'node_modules', modName)
+    path.join(PLUGIN_ROOT, 'skills', '3d-animator', 'kit', 'node_modules', modName)
   ];
   for (const c of candidates) {
     if (fs.existsSync(c)) return c;
@@ -42,7 +39,7 @@ function findNodeModule(modName) {
 
 const threeDir = findNodeModule('three');
 if (!threeDir) {
-  console.error('Error: Three.js module not found in kit/node_modules or sibling workspace node_modules.');
+  console.error('Error: Three.js module not found in kit/node_modules or plugin node_modules.');
   process.exit(1);
 }
 
@@ -65,11 +62,32 @@ const MIME = {
   '.gltf': 'model/gltf+json', '.bin': 'application/octet-stream'
 };
 
+function isInsideBase(targetPath, basePath) {
+  const normTarget = path.resolve(targetPath);
+  const normBase = path.resolve(basePath);
+  const cmpTarget = process.platform === 'win32' ? normTarget.toLowerCase() : normTarget;
+  const cmpBase = process.platform === 'win32' ? normBase.toLowerCase() : normBase;
+  return cmpTarget === cmpBase || cmpTarget.startsWith(cmpBase + path.sep);
+}
+
 const server = http.createServer((reqHttp, res) => {
   const urlPath = decodeURIComponent(reqHttp.url.split('?')[0]);
   if (urlPath === '/favicon.ico') {
     res.writeHead(204);
     return res.end();
+  }
+  if (urlPath.startsWith('/lemo-meta/')) {
+    const slug = path.basename(urlPath.slice('/lemo-meta/'.length));
+    const styleDir = path.join(PLUGIN_ROOT, 'skills', 'lemo-opuscar', 'styles', slug);
+    const jsonPath = path.join(styleDir, 'style.json');
+    const mdPath = path.join(styleDir, 'STYLE.md');
+    let exists = false, meta = null, mdText = '';
+    if (isInsideBase(styleDir, path.join(PLUGIN_ROOT, 'skills', 'lemo-opuscar', 'styles')) && fs.existsSync(styleDir)) {
+      if (fs.existsSync(jsonPath)) { try { meta = JSON.parse(fs.readFileSync(jsonPath, 'utf8')); exists = true; } catch {} }
+      if (fs.existsSync(mdPath)) { try { mdText = fs.readFileSync(mdPath, 'utf8'); exists = true; } catch {} }
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ exists, meta, mdText }));
   }
   let fsPath = null;
   let allowedBase = null;
@@ -100,7 +118,7 @@ const server = http.createServer((reqHttp, res) => {
     }
   }
 
-  if (!fsPath.startsWith(allowedBase) || !fs.existsSync(fsPath) || fs.statSync(fsPath).isDirectory()) {
+  if (!allowedBase || !fsPath || !isInsideBase(fsPath, allowedBase) || !fs.existsSync(fsPath) || fs.statSync(fsPath).isDirectory()) {
     res.writeHead(404);
     return res.end();
   }
@@ -151,7 +169,6 @@ const qs = new URLSearchParams({
   width: String(W),
   height: String(H),
   style: String(args.shader || args.style || 'lit'),
-  brush: String(args.brush || 'none'),
   lemo: String(args.lemo || 'none'),
   post: String(args.post || 'hdr'),
   total: String(args.total || '6')
@@ -174,7 +191,8 @@ const grab = async (t) =>
   );
 
 if (args.stills) {
-  const outDir = path.resolve(String(args.out || 'stills'));
+  const rawOut = String(args.out || 'stills');
+  const outDir = path.resolve(rawOut.toLowerCase().endsWith('.mp4') ? 'stills' : rawOut);
   fs.mkdirSync(outDir, { recursive: true });
   for (const s of String(args.stills).split(',')) {
     const t = parseFloat(s.trim());
@@ -198,14 +216,24 @@ if (args.stills) {
     outFile
   ], { stdio: ['pipe', 'inherit', 'inherit'] });
 
+  let ffErr = null;
+  ff.on('error', (err) => { ffErr = err; });
+  ff.stdin.on('error', () => {});
+
   for (let i = 0; i < frames; i++) {
+    if (ffErr) break;
     const buf = await grab(from + i / fps);
     if (!ff.stdin.write(buf)) await new Promise((r) => ff.stdin.once('drain', r));
     if (i > 0 && i % 30 === 0) console.log(`combo frame ${i}/${frames}`);
   }
   ff.stdin.end();
-  await new Promise((r) => ff.on('close', r));
-  console.log('combo video ->', outFile);
+  const ffCode = await new Promise((r) => ff.on('close', r));
+  if (ffErr || ffCode !== 0) {
+    console.error('ffmpeg failed:', ffErr ? ffErr.message : `exit code ${ffCode}`);
+    fatalErrors++;
+  } else {
+    console.log('combo video ->', outFile);
+  }
 } else {
   console.log('Nothing to do. Pass --stills=1,3 or --video');
 }

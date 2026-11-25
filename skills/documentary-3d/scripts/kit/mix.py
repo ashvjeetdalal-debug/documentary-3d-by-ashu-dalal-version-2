@@ -18,11 +18,12 @@ cues.json example:
   ]
 }
 """
-import json, subprocess, sys
+import json, os, subprocess, sys
 
 cues_path = sys.argv[1] if len(sys.argv) > 1 else 'sound/cues.json'
 out_path = sys.argv[2] if len(sys.argv) > 2 else 'sound/mix.wav'
-cfg = json.load(open(cues_path))
+os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
+cfg = json.load(open(cues_path, encoding='utf-8-sig'))
 L = float(cfg['length'])
 inputs, chains, mix = [], [], []
 
@@ -68,6 +69,8 @@ def loudness(path, extra=''):
     """Integrated loudness (LUFS) and true peak (dBTP) with ffmpeg's EBU R128 meter."""
     r = subprocess.run(['ffmpeg', '-hide_banner', '-nostats', '-i', path, '-af', (extra + ',' if extra else '') + 'ebur128=peak=true', '-f', 'null', '-'],
                        capture_output=True, text=True).stderr
+    if 'Summary:' not in r:
+        raise RuntimeError(f"ffmpeg ebur128 failed:\n{r}")
     summary = r[r.rindex('Summary:'):]
     I = float(summary.split('I:')[1].split('LUFS')[0]); P = float(summary.split('Peak:')[1].split('dBFS')[0])
     return I, P
@@ -80,7 +83,7 @@ for _ in range(3):   # gain up, limit the peaks to -1.5 dB, re-measure, correct 
     if abs(I1 - T) < 0.3: break
     gain += T - I1
 subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', tmp, '-af', chain + ',aresample=48000', '-c:a', 'pcm_s24le', out_path], check=True)
-import os; os.replace(tmp, out_path + '.unlevelled.wav')
+os.replace(tmp, out_path + '.unlevelled.wav')
 print(f"mix -> {out_path}  ({len(mix)} layers, {L:.2f} s)  {I0:.1f} LUFS -> {I1:.1f} LUFS (target {T}), true peak {P1:.1f} dBTP")
-for name, at in [('voice', (voice or {}).get('at')), *[(c['file'].split('/')[-1], c['at']) for c in cfg.get('sfx', [])]]:
+for name, at in [('voice', (voice or {}).get('at')), *[(os.path.basename(c['file']), c['at']) for c in cfg.get('sfx', [])]]:
     if at is not None: print(f"  {float(at):6.2f} s  {name}")

@@ -4,9 +4,9 @@ Documentary 3D by Ashu Dalal - Unified Director Workflow Engine
 Implements the Master 5-Step Production System:
   Step 1: Topic & Idea Selection -> Documentary Script Generation
   Step 2: Voiceover Audio Intake (User Upload or Generation)
-  Step 3: Zero-Fake Archival Asset Sourcing (Wikimedia Commons / Wikipedia)
+  Step 3: Zero-Fake Archival Asset Sourcing (Wikimedia Commons / Wikipedia / Openverse / Archive / NASA / LOC)
   Step 4: WhisperX Word-Level Transcript Alignment & Asset Timeline Mapping
-  Step 5 & 5(1): Gap Analysis & Interactive Visual Selection (Lemo-Opuscar, p5.brush, 3D-Animator)
+  Step 5 & 5(1): Gap Analysis & Interactive Visual Selection (Lemo-Opuscar, 3D-Animator, & Glitch-Free Combos)
 """
 
 import os
@@ -45,21 +45,12 @@ STYLES_3D = [
     {"name": "mix", "desc": "Multi-pass layered aesthetic combining wireframe contours with clay volume"}
 ]
 
-BRUSH_MEDIA = [
-    {"name": "charcoal", "desc": "Expressive rough charcoal silhouette sketches with smudge gradients"},
-    {"name": "watercolor", "desc": "Wet-in-wet watercolor washes with organic pigment bleeding and granulation"},
-    {"name": "pencil_hb", "desc": "Delicate technical graphite pencil line art on archival paper"},
-    {"name": "hatching", "desc": "Architectural cross-hatching and contour shading using rotring pens"},
-    {"name": "marker", "desc": "Bold semi-transparent felt marker overlays for highlighting and diagrams"},
-    {"name": "flow_field", "desc": "Generative vector flow fields guiding organic directional strokes"}
-]
 
 def get_lemo_styles(limit=15) -> List[Dict[str, str]]:
     """Retrieve available Lemo-Opuscar film styles from library."""
     if not os.path.exists(LEMO_STYLES_DIR):
         return []
     all_styles = [s for s in sorted(os.listdir(LEMO_STYLES_DIR)) if os.path.isdir(os.path.join(LEMO_STYLES_DIR, s)) and not s.startswith(('_', '.'))]
-    # Curated selection of top documentary and explainer styles
     curated = [
         "dark-documentary", "archive-lighttable", "briefing-board", "blueprint",
         "circuit-board", "comic-history", "halftone-dossier", "woodcut",
@@ -77,6 +68,7 @@ def get_lemo_styles(limit=15) -> List[Dict[str, str]]:
         if s not in [r["name"] for r in results]:
             results.append({"name": s, "type": "Lemo-Opuscar Film Style"})
     return results
+
 
 # -------------------------------------------------------------
 # STEP 1: TOPIC & SCRIPT FORMULATION
@@ -110,6 +102,7 @@ def suggest_documentary_topics() -> List[Dict[str, str]]:
         }
     ]
 
+
 # -------------------------------------------------------------
 # STEP 3: ZERO-FAKE ORIGINAL ASSET SOURCING
 # -------------------------------------------------------------
@@ -124,6 +117,7 @@ def execute_step3_asset_sourcing(topic_keywords: List[str], assets_dir: str, max
     )
     return downloaded
 
+
 # -------------------------------------------------------------
 # STEP 4: WHISPERX WORD MAPPING & GAP ANALYSIS
 # -------------------------------------------------------------
@@ -136,9 +130,7 @@ def execute_step4_audio_mapping_and_gaps(audio_path: str, assets_manifest: List[
     timeline = audio_sync.align_audio_whisper(audio_path, model_size="base")
     total_dur = timeline["duration"]
 
-    # Match assets to sentences using filename tokens, semantic manifest tags, and phonetic Hinglish aliases
     mapped_timeline = []
-    occupied_intervals = []
     alias_map = alias_map or {}
 
     for seg in timeline["segments"]:
@@ -167,10 +159,7 @@ def execute_step4_audio_mapping_and_gaps(audio_path: str, assets_manifest: List[
             "has_archival_asset": matched_asset is not None,
             "engine_role": "main_ashu_dalal_documentary" if matched_asset else "gap_engine_pending_user_choice"
         })
-        if matched_asset:
-            occupied_intervals.append((seg["start"], seg["end"]))
 
-    # Detect Empty "Khali" Spaces (Gaps where NO archival asset exists)
     gap_segments = []
     for item in mapped_timeline:
         if not item["has_archival_asset"]:
@@ -192,6 +181,9 @@ def execute_step4_audio_mapping_and_gaps(audio_path: str, assets_manifest: List[
         "total_gaps_count": len(gap_segments)
     }
 
+    out_dir = os.path.dirname(os.path.abspath(out_json))
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
     with open(out_json, "w", encoding="utf-8") as f:
         json.dump(result, f, indent=2, ensure_ascii=False)
 
@@ -199,38 +191,39 @@ def execute_step4_audio_mapping_and_gaps(audio_path: str, assets_manifest: List[
     print(f"Asset-Backed (MAIN Documentary Engine): {len(mapped_timeline) - len(gap_segments)} | Empty Gaps (Fallback Engines Only): {len(gap_segments)}")
     return result
 
+
 # -------------------------------------------------------------
 # SCRIPT-AWARE plan.md GENERATOR & RESEARCH-DRIVEN GAP PLANNER
 # -------------------------------------------------------------
 def _infer_gap_recommendation(text: str) -> Dict[str, Any]:
-    """Heuristically suggest initial engine/combo/3D-model directions for a gap sentence (to refine via internet research)."""
+    """Heuristically suggest initial 3D-Animator + Lemo-Opuscar engine/combo directions for a gap sentence."""
     low = text.lower()
     if any(k in low for k in ("hack", "code", "cyber", "virus", "worm", "network", "server", "data", "scan", "radar", "gps", "signal", "satellite")):
         return {
             "engines": "3D-Animator (`blueprint`/`thermal` + `styleAt` morph) + Lemo (`lidar-survey` / `hologram-hud` / `circuit-board`)",
-            "combo": "--shader=0:lit,1.5:blueprint --brush=flow_field --lemo=dark-documentary --post=hdr",
+            "combo": "--shader=0:lit,1.5:blueprint --lemo=dark-documentary --post=hdr",
             "needs_3d_model": "Optional server/satellite/hardware .glb if physical hardware is mentioned",
-            "sfx": "whoosh, typing, glitch, click"
+            "sfx": "whoosh, typing, glitch, shutter, sub_drop"
         }
     if any(k in low for k in ("centrifuge", "engine", "turbine", "aircraft", "plane", "rocket", "submarine", "weapon", "machine", "camera", "device", "factory", "reactor")):
         return {
-            "engines": "code-3d-video / 3D-Animator (`--model=<slug>.glb` + `teardown`/`blueprint`) + Lemo (`precise-mechanism` / `assembly-line-diagram`)",
+            "engines": "3D-Animator (`--model=<slug>.glb` + `paper`/`blueprint`) + Lemo (`blueprint` / `assembly-line-diagram`)",
             "combo": "--shader=paper --model=models/<slug>/<file>.gltf --lemo=blueprint --post=gtao",
             "needs_3d_model": "RECOMMENDED: Fetch real CC0 .glb/.gltf via `model_fetcher.py --query='<subject>'` or `--from-urls`",
-            "sfx": "thud, click, riser"
+            "sfx": "sub_drop, shutter, riser, projector"
         }
     if any(k in low for k in ("war", "secret", "plan", "letter", "spy", "intelligence", "history", "19", "century", "treaty", "assassination", "murder", "escape")):
         return {
-            "engines": "p5.brush (`charcoal` / `watercolor` / `hatching`) + Lemo (`halftone-dossier` / `vintage-collage` / `comic-history` / `silent-film`)",
-            "combo": "--shader=paper --brush=charcoal --lemo=halftone-dossier --post=gtao",
+            "engines": "3D-Animator (`paper`/`shadow` + GTAO/CRT) + Lemo (`halftone-dossier` / `vintage-collage` / `archive-lighttable` / `silent-film`)",
+            "combo": "--shader=paper --lemo=halftone-dossier --post=gtao",
             "needs_3d_model": "Optional vintage prop .glb (desk/lantern/radio) via Poly Haven CC0",
-            "sfx": "paper, stamp, thud, whoosh"
+            "sfx": "paper, stamp, typewriter, whoosh, drone"
         }
     return {
-        "engines": "Lemo-Opuscar (`dark-documentary` / `briefing-board`) + p5.brush (`watercolor` / `flow_field`) or `--combo`",
-        "combo": "--shader=paper --brush=watercolor --lemo=dark-documentary --post=gtao",
+        "engines": "Lemo-Opuscar (`dark-documentary` / `briefing-board`) + 3D-Animator (`lit`/`paper`/`clay` + `--post=gtao`)",
+        "combo": "--shader=paper --lemo=dark-documentary --post=gtao",
         "needs_3d_model": "Decide after internet visual research (use `model_fetcher.py` if concrete 3D object helps clarity)",
-        "sfx": "whoosh, click, riser"
+        "sfx": "whoosh, shutter, riser, sub_drop"
     }
 
 
@@ -245,16 +238,16 @@ def generate_plan_md(
 ) -> str:
     """
     Create a structured, research-driven `plan.md` mapping every spoken line:
-      - Asset-backed narration -> Primary Ashu-Dalal Evidence Board / code-3d-video
+      - Asset-backed narration -> Primary Ashu-Dalal Evidence Board
       - Empty Gaps ('khali parts') -> What is spoken, Mandatory Internet Visual Research brief,
-        Engine + Style + --combo blueprint, and downloadable .glb/.gltf 3D model plan.
+        3D-Animator + Lemo-Opuscar --combo blueprint, and downloadable .glb/.gltf 3D model plan.
     """
     assets_manifest = assets_manifest or []
     models_manifest = models_manifest or []
     lines = [
         f"# Documentary Production & Gap Visual Plan (`plan.md`) — {topic}\n",
-        "> **System Law:** Real archival asset sections use the **Primary Ashu-Dalal Backbone (`board_engine.py` / `code-3d-video`)**.",
-        "> **Gap Law:** For every no-asset *khali* part, AI **MUST research on the internet** (mechanics, real architecture, historical visual references, documentary staging) and update this plan BEFORE generating animations or choosing final styles.\n",
+        "> **System Law:** Real archival asset sections use the **Primary Ashu-Dalal Evidence Board (`board_engine.py`)**.",
+        "> **Gap Law:** For every no-asset *khali* part, AI **MUST research on the internet** (mechanics, real architecture, historical visual references, documentary staging) and update this plan BEFORE generating animations or choosing final styles across **3D-Animator** & **Lemo-Opuscar**.\n",
         "---",
         "\n## 1. Timeline Overview & Asset Coverage\n",
     ]
@@ -303,7 +296,7 @@ def generate_plan_md(
             lines.append(f"- **Suggested Engines & Styles:** {rec['engines']}")
             lines.append(f"- **Ready `--combo` Recipe:** `python studio.py --combo {rec['combo']} --stills=1.5,3.0`")
             lines.append(f"- **3D Model Plan (`.glb` / `.gltf`):** {rec['needs_3d_model']}")
-            lines.append(f"- **Sound Cues (Multi-Source Openverse+Archive+Wikimedia):** `{rec['sfx']}`\n")
+            lines.append(f"- **Documentary Sound Cues (Bundled CC0 + Multi-Source):** `{rec['sfx']}`\n")
 
     if models_manifest:
         lines.append(f"\n---\n\n## {sec_num}. Verified Downloaded 3D Models (`models_manifest.json`)\n")
@@ -311,6 +304,9 @@ def generate_plan_md(
             lines.append(f"- `{m.get('id')}` ({m.get('format')}, license: `{m.get('license')}`) -> `{m.get('file')}`")
 
     content = "\n".join(lines) + "\n"
+    out_dir = os.path.dirname(os.path.abspath(out_path))
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(content)
     print(f"[PLAN] Generated research & gap visual blueprint -> {out_path} ({len(gaps)} gap segment(s))")
@@ -322,28 +318,24 @@ def generate_plan_md(
 # -------------------------------------------------------------
 def format_step5_consultation_prompt(gap_segments: List[Dict[str, Any]]) -> str:
     """
-    Constructs the exact interactive consultation message to present to the user/operator
-    as specified in handwritten Step 5 & Substep 5(1).
+    Constructs the interactive consultation message for no-asset gaps across
+    Lemo-Opuscar, 3D-Animator, and glitch-free combined style combinations.
     """
     msg = []
     msg.append("## 🎨 STEP 5 & 5(1): VISUAL ENGINE SELECTION FOR NO-ASSET GAPS ONLY\n")
-    msg.append("**Note:** Jahan-jahan real archival assets available hain, wahan strictly aapki **Main Ashu-Dalal 3D Documentary Engine** hi chalegi.\n")
-    msg.append("Sirf neeche diye gaye *'khali parts'* (missing-asset gaps) jinke liye koi real asset nahi mila, unke liye **3 Fallback Visual Engines** available hain:\n")
+    msg.append("**Note:** Jahan-jahan real archival assets available hain, wahan strictly aapki **Main Ashu-Dalal Documentary Engine** hi chalegi.\n")
+    msg.append("Sirf neeche diye gaye *'khali parts'* (missing-asset gaps) jinke liye koi real asset nahi mila, unke liye **2 Fallback Visual Engines + Glitch-Free Combined Mode** available hain:\n")
 
-    msg.append("### 1. Lemo-Opuscar Studio (Curated Film Styles)")
-    for s in get_lemo_styles(8):
+    msg.append("### 1. Lemo-Opuscar Studio (99 Curated Film Styles)")
+    for s in get_lemo_styles(10):
         msg.append(f"  - `{s['name']}`: Cinematic thematic style preset")
 
-    msg.append("\n### 2. p5.brush (Natural Generative Media)")
-    for m in BRUSH_MEDIA:
-        msg.append(f"  - `{m['name']}`: {m['desc']}")
-
-    msg.append("\n### 3. 3D-Animator / Three.js (Procedural 3D World)")
-    for s in STYLES_3D[:6]:
+    msg.append("\n### 2. 3D-Animator / Three.js (12 Procedural Shader Looks)")
+    for s in STYLES_3D[:8]:
         msg.append(f"  - `{s['name']}`: {s['desc']}")
 
-    msg.append("\n### 4. Combined Hybrid Mode (`studio.py --combo` — Multi-Engine Fusion)")
-    msg.append("  - Combine `3D-Animator` shaders + `p5.brush` animated CanvasTextures + `Lemo-Opuscar` palettes/GTAO/CRT (`guides/COMBINATIONS.md`).")
+    msg.append("\n### 3. Glitch-Free Combined Style Mode (`studio.py --combo` — 3D-Animator + Lemo-Opuscar)")
+    msg.append("  - Combine `3D-Animator` shaders (`lit`, `paper`, `blueprint`, `toon`, `thermal`, `synth`, `mix`) + `Lemo-Opuscar` palettes & GTAO/DOF or VHS/CRT (`guides/COMBINATIONS.md`).")
     msg.append("  - Optional Classic Insert: `Vintage 2D Silent-Film` (`vintage_engine.py`).")
 
     msg.append("\n---\n")
@@ -355,10 +347,11 @@ def format_step5_consultation_prompt(gap_segments: List[Dict[str, Any]]) -> str:
     msg.append("*Batayein in khali parts ke liye konsa engine, combo aur style use karna hai? Agar aapko **aur styles** chahiye toh bas bolen — hum poori 99 styles ki list dikha denge.*")
     return "\n".join(msg)
 
+
 def main():
     parser = argparse.ArgumentParser(description="Unified 5-Step Director Workflow Engine")
     parser.add_argument("--suggest-topics", action="store_true", help="Print curated documentary topics")
-    parser.add_argument("--list-gap-styles", action="store_true", help="Print all styles across the 3 engines for Step 5(1)")
+    parser.add_argument("--list-gap-styles", action="store_true", help="Print all styles across 3D-Animator & Lemo-Opuscar for Step 5(1)")
     parser.add_argument("--run-intake", nargs=2, metavar=("AUDIO_PATH", "TOPIC_KEYWORDS"), help="Execute Steps 3 & 4: Audio intake, asset fetch, mapping, and plan.md generation")
     parser.add_argument("--plan", action="store_true", help="Generate script-aware & research-ready plan.md for topic/script or mapping JSON")
     parser.add_argument("--topic", type=str, default="Documentary Production", help="Topic title for --plan")
@@ -377,25 +370,24 @@ def main():
 
     if args.list_gap_styles:
         print("\n=== STEP 5(1) VISUAL ENGINES & STYLES CATALOG ===")
-        print("\n1. THREE.JS 3D SHADER LOOKS:")
+        print("\n1. 3D-ANIMATOR SHADER LOOKS (12):")
         for s in STYLES_3D:
-            print(f"  --style={s['name']:12} : {s['desc']}")
+            print(f"  --shader={s['name']:12} : {s['desc']}")
 
-        print("\n2. P5.BRUSH NATURAL MEDIA:")
-        for m in BRUSH_MEDIA:
-            print(f"  --media={m['name']:12} : {m['desc']}")
-
-        print("\n3. LEMO-OPUSCAR FILM STYLES (99 STYLES AVAILABLE):")
+        print("\n2. LEMO-OPUSCAR FILM STYLES (99 STYLES AVAILABLE):")
         for s in get_lemo_styles(20):
-            print(f"  --style={s['name']:20}")
-        print("\n")
+            print(f"  --lemo={s['name']:20}")
+        print("\nCombine cleanly via: python studio.py --combo --shader=<look> --lemo=<slug> --post=gtao|crt|hdr\n")
         return
 
     if args.plan:
-        script_txt = open(args.script_file, encoding="utf-8").read() if args.script_file and os.path.exists(args.script_file) else ""
-        mapping_obj = json.load(open(args.mapping, encoding="utf-8")) if args.mapping and os.path.exists(args.mapping) else None
-        research_txt = open(args.research_file, encoding="utf-8").read() if args.research_file and os.path.exists(args.research_file) else ""
-        models_obj = json.load(open("models/models_manifest.json", encoding="utf-8")) if os.path.exists("models/models_manifest.json") else []
+        for flag_name, path_val in (("--script-file", args.script_file), ("--mapping", args.mapping), ("--research-file", args.research_file)):
+            if path_val and not os.path.exists(path_val):
+                raise FileNotFoundError(f"{flag_name} not found: {path_val}")
+        script_txt = open(args.script_file, encoding="utf-8-sig").read() if args.script_file else ""
+        mapping_obj = json.load(open(args.mapping, encoding="utf-8-sig")) if args.mapping else None
+        research_txt = open(args.research_file, encoding="utf-8-sig").read() if args.research_file else ""
+        models_obj = json.load(open("models/models_manifest.json", encoding="utf-8-sig")) if os.path.exists("models/models_manifest.json") else []
         generate_plan_md(
             out_path=args.out, topic=args.topic, script_text=script_txt,
             mapping=mapping_obj, research_notes=research_txt, models_manifest=models_obj
@@ -410,6 +402,7 @@ def main():
         generate_plan_md(out_path=args.out, topic=keywords, mapping=mapping, assets_manifest=assets)
         prompt = format_step5_consultation_prompt(mapping["gap_segments"])
         print("\n" + prompt)
+
 
 if __name__ == "__main__":
     main()

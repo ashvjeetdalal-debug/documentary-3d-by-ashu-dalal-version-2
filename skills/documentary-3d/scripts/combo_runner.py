@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 """
-Documentary 3D by Ashu Dalal (Version 3) - Universal Modular Combo Runner
-Supports ALL 15 verified trouble-free combinations across:
-  - Evidence Board (board_engine.py) & Vintage Silent-Film (vintage_engine.py)
-  - Code-3D-Video (character.js / builders.js)
+Documentary 3D by Ashu Dalal (Version 3) - Glitch-Free Modular Combo Runner
+Supports ALL 10 verified trouble-free combinations strictly across:
+  - Ashu Dalal Evidence Board (board_engine.py) & Vintage Silent-Film (vintage_engine.py)
   - 3D-Animator (styles.js 12 shaders + HDR accumulation)
-  - p5.brush (BrushTextureTarget 3D textures + 2D overlay compositing)
-  - Lemo-Opuscar (STYLE.md palettes + post.js GTAO/DOF + crt.js VHS)
-  - Universal Finishers (handheld.py, phone_motion.py, laptop_reel.py, Openverse SFX)
+  - Lemo-Opuscar (99 STYLE.md palettes + post.js GTAO/DOF + crt.js VHS)
+  - Universal Finishers (handheld.py, phone_motion.py, laptop_reel.py, Bundled CC0 Documentary SFX)
 """
 
 import os
 import sys
-import json
 import argparse
 import subprocess
 
@@ -20,31 +17,26 @@ SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
 KIT_DIR = os.path.join(SCRIPTS_DIR, "kit")
 
 COMBO_CATALOG = [
-    {"id": "board-brush-overlay", "group": "A", "name": "Evidence Board + p5.brush Overlay", "when": "Archival maps/photos par hand-drawn charcoal wobble circles, watercolor map tints & marker swipes chahiye"},
     {"id": "board-handheld", "group": "A", "name": "Evidence Board + Handheld Physics", "when": "Flat digital pan ki jagah real smartphone human shake & micro-wander chahiye"},
     {"id": "board-crt", "group": "A", "name": "Evidence Board + Lemo VHS/CRT", "when": "Retro TV newsroom, 1980s-2000s cyber/intel broadcast look chahiye"},
     {"id": "board-3d-reel", "group": "A", "name": "Evidence Board + 3D-Animator / Laptop Reel", "when": "Archival photos 3D space me DOF/shadows ke saath dikhane ho ya 9:16 device mockup reel banani ho"},
-    {"id": "3d-code-shaders", "group": "B", "name": "Code-3D-Video + 3D-Animator Shaders", "when": "Walking 3D characters aur streets ko clay, paper, blueprint, toon, ya voxel look + motion blur dena ho"},
-    {"id": "3d-brush-surface", "group": "B", "name": "3D-Animator + p5.brush Live Textures", "when": "3D models & walls par animated watercolor, charcoal, ya hatching textures chahiye"},
     {"id": "3d-gtao-dof", "group": "B", "name": "3D-Animator + Lemo GTAO & Bokeh DOF", "when": "Studio-grade corner contact shadows (GTAO) aur 96-tap physical camera blur chahiye"},
     {"id": "3d-lemo-palette", "group": "B", "name": "3D-Animator + Lemo 99 Style Palettes", "when": "Lemo library ke exact dark-documentary / blueprint / comic-history color palettes 3D stage me lagane ho"},
-    {"id": "code3d-post-crt", "group": "B", "name": "Code-3D-Video + Lemo post.js / crt.js", "when": "Original code-3d-video stories par GTAO bokeh upgrade ya CRT videotape pass lagana ho"},
-    {"id": "3d-whisperx-morph", "group": "B", "name": "3D-Animator Live Style Morph (WhisperX)", "when": "Bina cut kiye spoken word aate hi scene ko lit se blueprint/thermal/synth me morph karna ho"},
-    {"id": "3d-mix-archival", "group": "B", "name": "3D-Animator Mix + Archival Photo + p5.brush", "when": "Ek hi frame me background lit, photo card 100% crisp readable, aur hero prop clay/blueprint rakhna ho"},
-    {"id": "vintage-brush", "group": "C", "name": "Vintage Silent-Film + p5.brush Boiling", "when": "Historical flashbacks me 12 fps hand-drawn charcoal boiling lines + sepia flicker chahiye"},
-    {"id": "brush-crt", "group": "C", "name": "p5.brush + Lemo VHS/CRT", "when": "Hand-drawn ink/watercolor animations par phosphor halation glow & CRT scanlines chahiye"},
-    {"id": "lemo-whisperx-openverse", "group": "C", "name": "Lemo Style + WhisperX + Openverse + Handheld", "when": "Kisi bhi Lemo film style me exact word sync, CC-licensed SFX (-14 LUFS), aur camera shake lagana ho"},
-    {"id": "master-4in1-hybrid", "group": "D", "name": "Master 4-in-1 Fusion (3D + p5.brush + Lemo + Handheld)", "when": "Flagship gap scene: 3D geometry + animated brush textures + Lemo palette/GTAO + human shake"}
+    {"id": "3d-whisperx-morph", "group": "B", "name": "3D-Animator Live Style Morph + Lemo (WhisperX)", "when": "Bina cut kiye spoken word aate hi scene ko lit se blueprint/thermal/synth me morph karna ho"},
+    {"id": "3d-mix-archival", "group": "B", "name": "3D-Animator Mix + Archival Photo + .glb Model + Lemo", "when": "Ek hi frame me background lit, photo card 100% crisp readable, aur hero .glb prop blueprint/clay + Lemo palette me rakhna ho"},
+    {"id": "lemo-whisperx-audio", "group": "C", "name": "Lemo Style + WhisperX + Documentary SFX + Handheld", "when": "Kisi bhi Lemo film style me exact word sync, CC0 documentary SFX (-14 LUFS), aur camera shake lagana ho"},
+    {"id": "3d-lemo-crt", "group": "C", "name": "3D-Animator + Lemo Palette + Lemo VHS/CRT", "when": "3D scenes par phosphor halation glow, chroma bleed, aur CRT scanlines chahiye"},
+    {"id": "master-3d-lemo-fusion", "group": "D", "name": "Master 3D-Animator + Lemo + .glb + Handheld Fusion", "when": "Flagship gap/custom 3D scene: 3D geometry/model + 3D shader + Lemo palette/GTAO + human shake"}
 ]
 
 
 def list_combos():
-    print("\n=== DOCUMENTARY 3D VERSION 3 - 15 VERIFIED TROUBLE-FREE COMBINATIONS ===")
+    print("\n=== DOCUMENTARY 3D VERSION 3 - 10 VERIFIED GLITCH-FREE COMBINATIONS ===")
     for i, c in enumerate(COMBO_CATALOG, 1):
         print(f" {i:2d}. [{c['id']:22}] ({c['group']}) {c['name']}")
         print(f"     Kab use karein: {c['when']}")
     print("\nGuide file: guides/COMBINATIONS.md")
-    print("Combo CLI example: python studio.py --combo --shader=paper --brush=watercolor --lemo=dark-documentary --post=gtao --stills=1.5,3.5\n")
+    print("Combo CLI example: python studio.py --combo --shader=paper --lemo=dark-documentary --post=gtao --stills=1.5,3.5 --out=stills\n")
 
 
 def apply_handheld_filter(in_mp4, out_mp4, motion_csv, width=1920, height=1080):
@@ -69,30 +61,17 @@ def apply_handheld_filter(in_mp4, out_mp4, motion_csv, width=1920, height=1080):
     dec.stdout.close()
     shk.stdout.close()
     enc.communicate()
-    if enc.returncode != 0:
-        raise RuntimeError("Handheld ffmpeg pipeline failed")
+    dec_rc = dec.wait()
+    shk_rc = shk.wait()
+    if dec_rc != 0 or shk_rc != 0 or enc.returncode != 0:
+        raise RuntimeError(f"Handheld ffmpeg pipeline failed (dec={dec_rc}, shk={shk_rc}, enc={enc.returncode})")
     print(f"[COMBO] Handheld motion pass applied -> {out_mp4}")
 
 
-def overlay_brush_on_video(base_mp4, brush_mp4, out_mp4, mode="screen"):
-    """Cleanly composites a p5.brush pass over an Evidence Board or 3D base MP4."""
-    if mode == "colorkey":
-        flt = "[1:v]colorkey=0x0a0c10:0.15:0.12[ov];[0:v][ov]overlay=shortest=1[v]"
-    else:
-        flt = f"[0:v][1:v]blend=all_mode={mode}:all_opacity=0.85[v]"
-    subprocess.run([
-        "ffmpeg", "-y", "-v", "error", "-i", base_mp4, "-i", brush_mp4,
-        "-filter_complex", flt, "-map", "[v]", "-map", "0:a?",
-        "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "copy", out_mp4
-    ], check=True)
-    print(f"[COMBO] Composited brush overlay ({mode}) -> {out_mp4}")
-
-
 def main():
-    parser = argparse.ArgumentParser(description="Universal Modular Combo Runner (Version 3)")
-    parser.add_argument("--list", action="store_true", help="List all 15 verified combinations")
+    parser = argparse.ArgumentParser(description="Glitch-Free 3D-Animator + Lemo-Opuscar Modular Combo Runner")
+    parser.add_argument("--list", action="store_true", help="List all 10 verified combinations")
     parser.add_argument("--shader", type=str, default="lit", help="3D-Animator shader or timeline (e.g. paper or 0:lit,2.5:blueprint)")
-    parser.add_argument("--brush", type=str, default="none", help="p5.brush preset (watercolor, charcoal, hatching, marker, flow_field, pencil_hb)")
     parser.add_argument("--lemo", type=str, default="none", help="Lemo-Opuscar style slug (e.g. dark-documentary, blueprint, archive-lighttable)")
     parser.add_argument("--post", type=str, default="hdr", choices=["hdr", "gtao", "crt", "none"], help="Clean single-pass post-FX")
     parser.add_argument("--photo", type=str, default="", help="Optional /assets/... or local file path mapped onto readable 3D card")
@@ -113,12 +92,16 @@ def main():
         list_combos()
         return
 
+    out_arg = args.out
+    if args.stills and out_arg.lower().endswith(".mp4"):
+        out_arg = "stills"
+
     cmd = [
         "node", os.path.join(KIT_DIR, "combo_render.mjs"),
         f"--width={args.width}", f"--height={args.height}",
-        f"--shader={args.shader}", f"--brush={args.brush}",
+        f"--shader={args.shader}",
         f"--lemo={args.lemo}", f"--post={args.post}",
-        f"--total={args.total}", f"--n={args.n}", f"--out={args.out}"
+        f"--total={args.total}", f"--n={args.n}", f"--out={out_arg}"
     ]
     if args.photo:
         cmd.append(f"--photo={args.photo}")
@@ -136,9 +119,10 @@ def main():
     print("[COMBO] Launching modular renderer:", " ".join(cmd))
     subprocess.run(cmd, check=True)
 
-    if args.video and args.handheld_csv and os.path.exists(args.out):
-        shaken = args.out.replace(".mp4", "_handheld.mp4")
-        apply_handheld_filter(args.out, shaken, args.handheld_csv, args.width, args.height)
+    if args.video and args.handheld_csv and os.path.exists(out_arg):
+        stem, ext = os.path.splitext(out_arg)
+        shaken = f"{stem}_handheld{ext or '.mp4'}"
+        apply_handheld_filter(out_arg, shaken, args.handheld_csv, args.width, args.height)
 
 
 if __name__ == "__main__":

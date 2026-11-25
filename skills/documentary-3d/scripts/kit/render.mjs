@@ -13,8 +13,7 @@ const req = createRequire(import.meta.url);
 function findNodeMod(name) {
   const cands = [
     path.join(__dirname, 'node_modules', name),
-    path.resolve(__dirname, '../../../../node_modules', name),
-    path.resolve(__dirname, '../../../../../stuxnet_reel_9x16/node_modules', name)
+    path.resolve(__dirname, '../../../../node_modules', name)
   ];
   return cands.find((c) => fs.existsSync(c)) || null;
 }
@@ -24,18 +23,28 @@ if (!pupDir) { console.error('puppeteer or puppeteer-core not found; run npm ins
 const pupMod = req(pupDir);
 const puppeteer = pupMod.default || pupMod;
 
-const args = Object.fromEntries(process.argv.slice(2).map((a) => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true]; }));
+const args = Object.fromEntries(process.argv.slice(2).map((a) => {
+  const s = a.replace(/^--/, ''), idx = s.indexOf('=');
+  return idx === -1 ? [s, true] : [s.slice(0, idx), s.slice(idx + 1)];
+}));
 const ROOT = path.resolve('.');
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.css': 'text/css', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.glb': 'model/gltf-binary', '.hdr': 'application/octet-stream' };
+function isInsideBase(targetPath, basePath) {
+  const nt = path.resolve(targetPath), nb = path.resolve(basePath);
+  const ct = process.platform === 'win32' ? nt.toLowerCase() : nt;
+  const cb = process.platform === 'win32' ? nb.toLowerCase() : nb;
+  return ct === cb || ct.startsWith(cb + path.sep);
+}
 const server = http.createServer((reqHttp, res) => {
   const urlPath = decodeURIComponent(reqHttp.url.split('?')[0]);
+  if (urlPath === '/favicon.ico') { res.writeHead(204); return res.end(); }
   let p = path.join(ROOT, urlPath);
   let base = ROOT;
   if (urlPath.startsWith('/node_modules/three/') && threeDir) {
     base = threeDir;
     p = path.join(threeDir, urlPath.slice('/node_modules/three/'.length));
   }
-  if (!p.startsWith(base) || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
+  if (!isInsideBase(p, base) || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
   res.writeHead(200, { 'Content-Type': MIME[path.extname(p)] || 'application/octet-stream' }); fs.createReadStream(p).pipe(res);
 });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
@@ -48,8 +57,9 @@ const browser = await puppeteer.launch({ headless: true, executablePath: execPat
   args: ['--no-sandbox', '--disable-setuid-sandbox', '--hide-scrollbars', '--force-color-profile=srgb', '--enable-gpu', '--ignore-gpu-blocklist', '--disable-gpu-vsync', '--run-all-compositor-stages-before-draw', ...angle] });
 const page = await browser.newPage();
 await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
-page.on('console', (m) => { if (['error', 'warning', 'warn'].includes(m.type())) console.log('[page]', m.type(), m.text()); });
-page.on('pageerror', (e) => console.log('[pageerror]', e.message));
+let fatalErrors = 0;
+page.on('console', (m) => { if (['error', 'warning', 'warn'].includes(m.type())) console.log('[page]', m.type(), m.text()); if (m.type() === 'error') fatalErrors++; });
+page.on('pageerror', (e) => { console.log('[pageerror]', e.message); fatalErrors++; });
 page.on('response', (r) => { if (r.status() >= 400) console.log('[missing]', r.url()); });
 await page.goto(`http://127.0.0.1:${port}/index.html?render=1${args.style ? `&style=${args.style}` : ''}`, { waitUntil: 'load' });   // --style=<name> (styles.js)
 await page.waitForFunction('window.__ready === true', { timeout: 120000 });
@@ -72,17 +82,23 @@ if (args.stills) {
     '-map', '0:v', ...(args.audio ? ['-map', '1:a', '-c:a', 'aac', '-b:a', '256k', '-shortest'] : []),
     '-c:v', 'libx264', '-preset', 'slow', '-crf', String(args.crf || 16), '-pix_fmt', 'yuv420p', '-profile:v', 'high',
     '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', '-movflags', '+faststart', outFile], { stdio: ['pipe', 'inherit', 'inherit'] });
+  let ffErr = null;
+  ff.on('error', (err) => { ffErr = err; });
+  ff.stdin.on('error', () => {});
   const t0 = Date.now();
   for (let i = 0; i < n; i++) {
+    if (ffErr) break;
     const buf = await grab(from + i / fps);
     if (!ff.stdin.write(buf)) await new Promise((r) => ff.stdin.once('drain', r));
     if (i % 30 === 0 && i) { const s = (Date.now() - t0) / 1000; console.log(`frame ${i}/${n}  ${s.toFixed(0)} s, about ${((n - i) * s / i).toFixed(0)} s left`); }
   }
-  ff.stdin.end(); await new Promise((r) => ff.on('close', r));
-  console.log('video ->', outFile, `${n} frames in ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+  ff.stdin.end();
+  const ffCode = await new Promise((r) => ff.on('close', r));
+  if (ffErr || ffCode !== 0) { console.error('ffmpeg failed:', ffErr ? ffErr.message : `exit ${ffCode}`); fatalErrors++; }
+  else console.log('video ->', outFile, `${n} frames in ${((Date.now() - t0) / 1000).toFixed(0)} s`);
 } else console.log('Nothing to do. Use --stills=1,2,3 or --video');
 // Chrome can take 30-40 s to shut down after a long render: give it 8 s, then end it.
 server.closeAllConnections?.(); server.close();
 await Promise.race([browser.close(), new Promise((r) => setTimeout(r, 8000))]);
 try { browser.process()?.kill('SIGKILL'); } catch {}
-process.exit(0);
+process.exit(fatalErrors > 0 ? 2 : 0);

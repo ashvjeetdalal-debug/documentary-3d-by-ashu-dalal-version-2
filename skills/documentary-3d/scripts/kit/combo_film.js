@@ -1,16 +1,15 @@
 /**
- * Universal Modular Combo Scene Engine (Version 3)
+ * Glitch-Free 3D-Animator + Lemo-Opuscar Modular Scene Engine (Version 3)
  * Combines cleanly:
  *   - 3D-Animator (12 shader looks + live mid-shot morphing + HDR accumulation)
- *   - p5.brush (BrushTextureTarget live CanvasTextures on 3D surfaces)
- *   - Lemo-Opuscar (STYLE.md palettes + core/three/post.js GTAO/DOF OR core/post/crt.js CRT)
+ *   - Lemo-Opuscar (99 STYLE.md palettes + core/three/post.js GTAO/DOF OR core/post/crt.js CRT)
  *   - Archival Photo Cards (userData.preserveReadable = true so photos stay crisp in all looks)
+ *   - Real CC0 .glb / .gltf 3D Models (GLTFLoader with auto-centering & scale normalization)
  */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { clamp, lerp, easeInOut, smooth, halton, hash } from './lib.js';
+import { clamp, lerp, easeInOut, halton, hash } from './lib.js';
 import { setStyle, styleAt } from './styles.js';
-import { BrushTextureTarget } from './p5_brush_texture.js';
 import { loadLemoStyle, createPostController } from './lemo_bridge.js';
 
 function parseStyleSpec(spec) {
@@ -41,9 +40,9 @@ async function loadModelAsync(url) {
   }
 }
 
-export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMode, photoUrl, modelUrl, totalSec }) {
+export async function bootCombo({ W, H, styleSpec, lemoSlug, postMode, photoUrl, modelUrl, totalSec }) {
   const stageCanvas = document.getElementById('stage');
-  // Keep stageCanvas free for 2D blitting whenever HDR accumulation or CRT WebGL2 post owns stageCanvas
+  // Keep stageCanvas free for 2D/WebGL2 blitting whenever HDR accumulation or CRT owns stageCanvas
   const useOffscreenGl = (postMode === 'crt' || postMode === 'hdr' || postMode === 'none');
   const glCanvas = useOffscreenGl ? Object.assign(document.createElement('canvas'), { width: W, height: H }) : stageCanvas;
 
@@ -64,7 +63,7 @@ export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMo
   const lemo = await loadLemoStyle(lemoSlug);
   const bgHex = lemo ? lemo.bg : '#0c1018';
   const wallHex = lemo ? lemo.wall : '#242c3b';
-  const inkHex = lemo ? lemo.primary : '#202634';
+  const deskHex = lemo ? (lemo.isDark ? '#1a202c' : '#d8cfc0') : '#4c382a';
   const accentHex = lemo ? lemo.accent : '#d0312d';
 
   const scene = new THREE.Scene();
@@ -74,7 +73,7 @@ export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMo
   const aspect = W / H;
   const camera = new THREE.PerspectiveCamera(aspect < 1 ? 52 : 42, aspect, 0.1, 40);
 
-  // Studio Three-Point Lighting
+  // Studio Three-Point Lighting harmonized with Lemo palette
   const fill = new THREE.HemisphereLight(lemo ? lemo.primary : '#b8d4ff', '#1a1816', 0.85);
   scene.add(fill);
 
@@ -90,26 +89,18 @@ export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMo
   scene.add(rim);
 
   // Stage Floor & Backdrop
-  const deskMat = new THREE.MeshStandardMaterial({ color: '#4c382a', roughness: 0.65, metalness: 0.05 });
+  const deskMat = new THREE.MeshStandardMaterial({ color: deskHex, roughness: 0.68, metalness: 0.05 });
   const desk = new THREE.Mesh(new THREE.BoxGeometry(5.5, 0.08, 3.6), deskMat);
   desk.position.set(0, -0.04, 0);
   desk.receiveShadow = true;
   desk.userData.kind = 'back';
   scene.add(desk);
 
-  let brushTarget = null;
-  let wallMat = new THREE.MeshStandardMaterial({ color: wallHex, roughness: 0.88, metalness: 0.02 });
-  if (brushPreset && brushPreset !== 'none') {
-    brushTarget = new BrushTextureTarget(1024, 1024);
-    wallMat = brushTarget.createMaterial({ roughness: 0.86 });
-    wallMat.userData = { preserveReadable: false };
-  }
-
+  const wallMat = new THREE.MeshStandardMaterial({ color: wallHex, roughness: 0.88, metalness: 0.02 });
   const backWall = new THREE.Mesh(new THREE.PlaneGeometry(5.5, 3.6), wallMat);
   backWall.position.set(0, 1.4, -1.2);
   backWall.receiveShadow = true;
-  if (brushTarget) backWall.userData.preserveReadable = true; // preserve painted p5.brush artwork on wall across shaders
-  else backWall.userData.kind = 'back';
+  backWall.userData.kind = 'back';
   scene.add(backWall);
 
   // Hero Procedural 3D Artifacts (respond cleanly to all 12 shaders)
@@ -119,7 +110,7 @@ export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMo
 
   const plinth = new THREE.Mesh(
     new THREE.CylinderGeometry(0.32, 0.36, 0.08, 32),
-    new THREE.MeshStandardMaterial({ color: '#273040', roughness: 0.4, metalness: 0.65 })
+    new THREE.MeshStandardMaterial({ color: lemo ? lemo.primary : '#273040', roughness: 0.42, metalness: 0.55 })
   );
   plinth.position.set(0, 0.04, 0);
   plinth.castShadow = plinth.receiveShadow = true;
@@ -175,8 +166,7 @@ export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMo
 
       if (gltf.animations && gltf.animations.length) {
         gltfMixer = new THREE.AnimationMixer(mdl);
-        const clip = gltf.animations[0];
-        gltfMixer.clipAction(clip).play();
+        gltfMixer.clipAction(gltf.animations[0]).play();
       }
     }
   }
@@ -236,15 +226,6 @@ export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMo
   });
 
   const styleTimeline = parseStyleSpec(styleSpec);
-  const baseBrushPalette = lemo ? [lemo.isDark ? '#1a202c' : '#f4efe4', inkHex, accentHex] : ['#f4efe4', '#222836', '#d0312d'];
-  const SHADER_BRUSH_PALETTES = {
-    blueprint: ['#071a45', '#dcebff', '#3d64b8'],
-    synth: ['#16072d', '#36efff', '#ff43db'],
-    shadow: ['#140804', '#ffd27e', '#d9802f'],
-    thermal: ['#080020', '#ffad18', '#ff3438'],
-    neon: ['#0a0d1a', '#88aaff', '#ff5745']
-  };
-
   const SHUTTER = 0.5 / 30;
   const offCtx = (postMode === 'hdr' || postMode === 'none')
     ? Object.assign(document.createElement('canvas'), { width: W, height: H }).getContext('2d')
@@ -268,12 +249,10 @@ export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMo
     }
 
     const activeStyle = styleAt(styleTimeline, tSub, 'lit');
-    if (brushTarget) {
-      const activeBrushPalette = (!lemo && SHADER_BRUSH_PALETTES[activeStyle]) ? SHADER_BRUSH_PALETTES[activeStyle] : baseBrushPalette;
-      brushTarget.update(tSub, brushPreset, activeBrushPalette);
-    }
-
     setStyle(activeStyle, { scene, key, fill, renderer });
+    if (scene.fog && scene.background && scene.background.isColor) {
+      scene.fog.color.copy(scene.background);
+    }
 
     // Single Eased Camera Curve
     const camZ = lerp(aspect < 1 ? 2.4 : 2.1, aspect < 1 ? 1.65 : 1.35, e);

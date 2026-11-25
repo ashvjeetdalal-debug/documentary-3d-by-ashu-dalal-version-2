@@ -1,159 +1,79 @@
 # Documentary 3D by Ashu Dalal Version 3
 
-An industrial-grade, code-driven cinematic video production suite.
+A clean, glitch-free **3-Engine Cinematic Documentary & 3D Studio** built around:
 
-This unified studio fuses **six powerful film-making technologies** into a single cohesive development environment:
-
-1. **Ashu Dalal / Kaz Documentary Engine**: 2.5D investigative evidence board (pinned photos, red yarn/strings, typewriter labels, stamps, smooth camera moves) + vintage 2D silent-film inserts (boiling lines, iris wipes, intertitle cards).
-2. **Three.js 3D Procedural Studio (`kit/`)**: Headless Chrome offline renderer (no Blender), 12 shader looks (`lit`, `clay`, `paper`, `blueprint`, `toon`, `synth`, etc.), sub-frame motion blur, depth of field, real phone shake physics (`phone_motion.py`, `handheld.py`), and vertical social reels (`laptop_reel.py`).
-3. **p5.brush Generative Natural Media Engine (`skills/p5-brush/`)**: Official `p5.brush` engine for procedural charcoal, watercolor wash & bleed, colored pencils, felt markers, architectural cross-hatching, and vector flow fields rendered frame-by-frame.
-4. **Lemo-Opuscar Directorial Studio (`skills/lemo-opuscar/`)**: 99 complete code-driven film styles (`dark-documentary`, `archive-lighttable`, `briefing-board`, `circuit-board`, `comic-history`, `watercolor`, etc.), the legendary `DIRECTOR.md` (narrative rhythm, music grid, camera blocking), and `TECHNIQUE.md` (frame synthesis, automated TTS, EBU R128 audio mastering).
-5. **WhisperX / Word-Level Speech Sync & `plan.md` Engine (`audio_sync.py`, `director_workflow.py`)**: Forced word-level alignment across English, Hindi, and Hinglish speech (`whisperx` / `faster-whisper` / `openai-whisper`) + automatic research-driven **`plan.md`** generation mapping archival sections vs internet-researched gap visuals & 3D models.
-6. **Multi-Source Assets, CC0 3D Models & Real CC Audio (`asset_fetcher.py`, `model_fetcher.py`, `openverse_sfx.py`)**: Verified real-world images (Wikimedia, Wikipedia, Openverse, Archive, NASA, `--from-urls`), real CC0 `.glb`/`.gltf` 3D models (Poly Haven API + `--from-urls` for `combo_film.js` / `gltf.js`), and multi-source real CC SFX/music (Openverse + Wikimedia Audio + Archive Audio + optional `FREESOUND_API_KEY`, mixed at `-14 LUFS` via FFmpeg `kit/mix.py`).
+1. **Main Documentary Engine — Ashu Dalal (`board_engine.py`, `vintage_engine.py`)**: 2.5D investigative evidence board (one continuous camera, pinned photos, red yarn/strings, typewriter labels, stamps) + vintage 2D silent-film inserts (boiling lines on twos, iris wipes, intertitle cards).
+2. **3D-Animator Engine (`skills/3d-animator/` + `kit/`)**: Code-driven Three.js 3D studio (headless Chrome offline renderer, 12 shader looks, sub-frame motion blur, depth of field, handheld camera shake `handheld.py`, and 9:16 mockup reels `laptop_reel.py`). Used primarily for **no-asset documentary gaps** (*khali parts*), and freely available anytime for custom/standalone 3D scenes.
+3. **Lemo-Opuscar Studio (`skills/lemo-opuscar/`)**: 99 film styles (`dark-documentary`, `archive-lighttable`, `briefing-board`, `circuit-board`, `halftone-dossier`, etc.), GTAO + 96-tap Bokeh DOF (`core/three/post.js`), VHS/CRT post-FX (`core/post/crt.js`), `DIRECTOR.md` pacing, and `TECHNIQUE.md` mastering — elevating overall video quality and pairing cleanly with `3D-Animator`.
+4. **Automated Intake & Bundled Documentary Audio**:
+   - **WhisperX Sync & Gap Planner (`audio_sync.py`, `director_workflow.py`)**: Word-level forced alignment (English, Hindi, Hinglish) and research-driven `plan.md`.
+   - **Real Internet Media & CC0 3D Models (`asset_fetcher.py`, `model_fetcher.py`)**: Verified archival images (zero fake assets) and real CC0 `.glb`/`.gltf` 3D models.
+   - **Bundled 23-Cue CC0 Documentary SFX + Multi-Source Audio (`assets/sfx/`, `openverse_sfx.py`)**: Instant 48 kHz WAV documentary cues (`sub_drop`, `braam`, `riser`, `whoosh`, `paper`, `typewriter`, `shutter`, `projector`, `glitch`, `drone_dark`, etc.) + Openverse/Wikimedia/Archive/Freesound fetch mixed at `-14 LUFS` (`sound_bed.py` legacy synth preserved intact & silenced by default).
 
 ---
 
-## 📂 Suite Directory Structure
+## 📂 Clean Directory Structure
 
 ```text
-documentary-3d-by-ashu-dalal/
+documentary-3d-by-ashu-dalal-version-3/
 ├── plugin.json                 # Studio Edition plugin manifest
-├── README.md                   # Full master documentation
+├── README.md                   # Master documentation
 ├── INSTALL.txt                 # Setup & dependencies guide
-├── 3D-Animator-Skill.pdf       # 3D animation manual
+├── studio.py                   # Master studio CLI
 ├── assets/
-│   └── logo.svg                # Master plugin badge
+│   ├── logo.svg                # Master plugin badge
+│   └── sfx/                    # Bundled 23-cue CC0/CC-BY documentary SFX pack (48 kHz WAV)
+├── guides/
+│   └── COMBINATIONS.md         # 10 verified glitch-free combinations guide
 ├── rules/
-│   └── AGENTS.md               # Unified production & creative laws
-├── guides/                     # Core directorial & production manuals
-│   ├── COMBINATIONS.md         # Universal 15 Modular Engine Combinations Guide (When, What, How)
-│   ├── DIRECTOR.md             # Narrative rhythm, music grid, camera blocking
-│   ├── TECHNIQUE.md            # Technical rendering, audio pipelines, QA
-│   ├── MY-STYLES.md            # Creating and customizing new styles
-│   └── MAINTAINING.md          # Toolchain maintenance
+│   └── AGENTS.md               # Unified production & system hierarchy laws
 └── skills/
-    ├── documentary-3d/         # Master documentary workflow skill
+    ├── documentary-3d/         # Primary Ashu Dalal documentary workflow & combo scripts
     │   ├── SKILL.md
-    │   ├── references/         # Deep reference manuals (lighting, camera, styles, sound)
-    │   │   ├── 3d-styles.md
-    │   │   ├── camera.md
-    │   │   ├── engine-guide.md
-    │   │   ├── film-styles-catalog.md # 100 styles index
-    │   │   ├── light.md
-    │   │   ├── motion.md
-    │   │   ├── p5-brush-guide.md
-    │   │   ├── present.md
-    │   │   ├── sound.md
-    │   │   └── style-guide.md
+    │   ├── references/         # style-guide.md, engine-guide.md, sound.md, film-styles-catalog.md, etc.
     │   └── scripts/
-    │       ├── board_engine.py      # 2.5D Evidence Board renderer (PRIMARY)
-    │       ├── vintage_engine.py    # Vintage silent-film 2D engine
+    │       ├── board_engine.py      # Primary 2.5D Evidence Board renderer
+    │       ├── vintage_engine.py    # Primary Vintage 2D silent-film insert engine
     │       ├── director_workflow.py # Step 1B-5(1) plan.md & gap consultation
     │       ├── asset_fetcher.py     # Multi-source archival image fetcher
     │       ├── model_fetcher.py     # CC0/open 3D .glb/.gltf model fetcher
     │       ├── audio_sync.py        # WhisperX / Whisper word alignment
-    │       ├── openverse_sfx.py     # Multi-source CC audio & SFX engine
-    │       ├── combo_runner.py      # Universal 15-combo modular runner
+    │       ├── openverse_sfx.py     # Bundled SFX + Multi-source CC audio engine
+    │       ├── combo_runner.py      # Glitch-free 10-combo runner
     │       ├── sound_bed.py         # Legacy synth (silenced by default)
+    │       ├── sound_config.json    # Active audio mode config
     │       ├── mix_and_mux.py/.sh   # Sidechain ducking & -14 LUFS multiplexer
     │       ├── splice.py/.sh        # Frame-accurate video splicing
-    │       └── kit/                 # 3D Procedural Engine, Combo & Presentation Tools
-    │           ├── combo_film.js    # Universal combo 3D+Brush+Lemo+GLTF stage
-    │           ├── combo_render.mjs # Conflict-free headless combo server
-    │           ├── index.html       # WebGL stage canvas
-    │           ├── film.js          # 3D scene definition (pure function of time)
-    │           ├── styles.js        # 12 artistic shader looks
-    │           ├── render.mjs       # Headless Chrome offline renderer
-    │           ├── lib.js           # Easing curves, Halton jitter, hash math
-    │           ├── mix.py           # Multitrack audio mixer (-14 LUFS)
-    │           ├── package.json     # Three.js + Puppeteer configuration
-    │           └── present/
-    │               ├── phone_motion.py # Camera shake extractor (2D FFT)
-    │               ├── handheld.py     # Camera shake injector
-    │               └── laptop_reel.py/.sh # Laptop/phone mockup reel generator
-    ├── code-3d-video/          # Primary 3D Documentary Kit (`--init-3d`)
-    ├── p5-brush/               # Natural Media Generative Drawing Skill
-    │   ├── SKILL.md            # Brush usage & animation guide
-    │   ├── llms.txt            # Complete API spec for code generation
-    │   ├── dist/               # Standalone and p5 production builds
-    │   ├── src/                # Full library source code
-    │   ├── examples/           # Official demo sketches
-    │   └── kit/                # Ready-to-render template (render_brush.mjs)
-    └── lemo-opuscar/           # 99 Film Styles & Studio Skill
-        ├── SKILL.md            # Production guide for styles
-        ├── core/               # Shared rendering, audio, post-processing tools
-        └── styles/             # 99 complete film style folders
+    │       └── kit/                 # 3D-Animator + Lemo Combo & Presentation Tools
+    ├── 3d-animator/            # Standalone & gap-ready 3D-Animator skill (from 3d-animator.zip)
+    │   ├── SKILL.md
+    │   ├── 3D-Animator-Skill.pdf
+    │   ├── references/
+    │   └── kit/
+    └── lemo-opuscar/           # Full Lemo-Opuscar Studio (99 film styles, core post-FX, guides)
 ```
-
----
-
-## 🎨 Creative Highlights
-
-### 1. The 12 3D Shader Styles (`kit/styles.js`)
-Switch styles on the fly via query parameter or flag (`--style=<name>`):
-- **`lit`**: Photorealistic cinematic room lighting with motivated keys and sky fill.
-- **`clay`**: Matte ivory sculpt maquette.
-- **`paper`**: Textured construction paper cutout with dark edges.
-- **`shadow`**: Backlit shadow puppet silhouettes.
-- **`blueprint`**: Deep architectural navy with crisp white construction wireframes.
-- **`toon`**: Cel-shaded 3-band comic book look with hand-inked outlines.
-- **`voxel`**: Tiny cubic discretization under dynamic lighting.
-- **`thermal`**: Infrared heat vision gradient (cold blue to white-hot).
-- **`synth`**: 80s synthwave neon magenta grid with cyan outlines.
-- **`chrome`**: Liquid mercury polished metal reflections.
-- **`neon`**: Night-time room washed in vivid neon tubes.
-- **`mix`**: Multi-style composite per scene object.
-
-### 2. Natural Media Simulation (`skills/p5-brush/`)
-- Pressure-sensitive pencils (`HB`, `2B`, `cpencil`), rough charcoal, semi-translucent markers, and watercolor pigment washes with authentic bleed physics.
-- Cross-hatching algorithms and Perlin flow fields.
-
-### 3. Directing with the Music Grid (`guides/DIRECTOR.md`)
-- Tempo-based pacing (BPM grids).
-- Camera blocking without static monotony.
-- Minimum 1.8-second subtitle duration rules.
-
-### 4. Broadcast Audio Engineering (Multi-Source CC Default)
-- **Active Default (`openverse_sfx.py`)**: Real CC/Public-Domain SFX (`whoosh`, `paper`, `stamp`, `typing`, `thud`, `siren`) and ambient music beds fetched across **Openverse Audio API**, **Wikimedia Commons Audio**, **Internet Archive Audio**, optional **Freesound API v2** (`FREESOUND_API_KEY`), and `--from-urls`, normalized to `48 kHz` WAV and logged to `openverse_attribution.json`.
-- **Silenced Legacy Fallback (`sound_bed.py`, `gen_sfx.py`)**: Preserved intact inside the plugin but **silenced by default** via `sound_config.json` (`"active_engine": "openverse"`). Switchable anytime via `python studio.py --sound-mode=legacy_synth`.
-- Automatic sidechain ducking of background music under speech and master normalization strictly calibrated to **-14 LUFS** and **-1.5 dBTP** (EBU R128).
 
 ---
 
 ## 🛠️ Quick Commands
 
-### 1. Generate `plan.md`, Fetch Real Assets, 3D Models & SFX:
 ```bash
+# Inspect 3-engine hierarchy, 10 glitch-free combos & 23 bundled documentary SFX:
+python studio.py --list-engines
+python studio.py --list-combos
+python studio.py --list-sfx
+
+# Generate plan.md, fetch real archival assets, 3D models & documentary SFX:
 python studio.py --plan --topic="Stuxnet" --script-file=script.txt --out=plan.md
 python studio.py --fetch-assets="Stuxnet,Natanz" --out=assets
 python studio.py --fetch-models="camera,desk" --out=models --res=1k
-python studio.py --fetch-sfx="whoosh,paper,stamp" --out=sound
-```
+python studio.py --fetch-sfx="sub_drop,riser,whoosh,paper,typewriter,shutter,stamp" --out=sound
 
-### 2. Render Modular Combinations & 3D Models:
-```bash
-python studio.py --list-combos
-python studio.py --combo --shader=paper --brush=watercolor --lemo=dark-documentary --post=gtao --stills=1.5,3.5
-python studio.py --combo --shader=blueprint --model=models/Camera_01/Camera_01_1k.gltf --brush=flow_field --stills=2.0
-```
+# Render glitch-free 3D-Animator + Lemo-Opuscar combinations:
+python studio.py --combo --shader=paper --lemo=dark-documentary --post=gtao --stills=1.5,3.5 --out=stills_test
+python studio.py --combo --shader=blueprint --lemo=briefing-board --post=crt --stills=1.5 --out=stills_crt
 
-### 3. Auto-Bootstrap & Render `code-3d-video` / Primary Board:
-```bash
-python studio.py --init-3d my_3d_project
+# Render Primary Evidence Board & Standalone 3D-Animator:
 python studio.py --render-board --script=my_project/board_engine.py --stills=2,5
-```
-
-### 4. Standalone Engines & Vertical Mockup Reel (9:16):
-```bash
 python studio.py --render-3d --style=blueprint --stills=2.5
-python studio.py --render-brush --stills=2.5
-python skills/documentary-3d/scripts/kit/present/laptop_reel.py laptop.png out/final.mp4 200 450 680 380 out/reel.mp4 motion.csv
 ```
-
----
-
-## 📜 Credits & Attributions
-- **Ashu Dalal**: Suite creator & documentary director.
-- **p5.brush**: Alejandro Campos Uribe (`acamposuribe/p5.brush`).
-- **Lemo-Opuscar**: Lemomo AI (`lemomo-ai/lemo-opuscar`).
-- **Three.js**: Mr.doob and Three.js contributors.
