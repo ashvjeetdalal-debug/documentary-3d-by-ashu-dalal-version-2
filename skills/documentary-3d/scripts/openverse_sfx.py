@@ -18,7 +18,7 @@ import urllib.parse
 import argparse
 
 API_BASE = "https://api.openverse.org/v1/audio/"
-USER_AGENT = "Documentary3D-AshuDalal/2.1 (Openverse Audio Client; contact@antigravity.ai)"
+USER_AGENT = "Documentary3D-AshuDalal/3.0 (Openverse Audio Client; contact@antigravity.ai)"
 
 # Curated Openverse search terms tailored for documentary SFX cues
 DEFAULT_SFX_QUERIES = {
@@ -35,23 +35,27 @@ DEFAULT_SFX_QUERIES = {
 }
 
 
-def search_openverse_audio(query, category="sound_effect", license_filter="cc0,pdm,by", page_size=8, max_duration_ms=None):
+def _query_openverse_once(params):
+    url = API_BASE + "?" + urllib.parse.urlencode(params)
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=25) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def search_openverse_audio(query, category=None, license_filter="cc0,pdm,by", page_size=8, max_duration_ms=None):
     """Query Openverse Audio API for real openly-licensed sound effects or music."""
-    params = {
-        "q": query,
-        "page_size": str(page_size)
-    }
-    if category:
+    params = {"q": query, "page_size": str(page_size)}
+    if category and category != "all":
         params["category"] = category
     if license_filter:
         params["license"] = license_filter
 
-    url = API_BASE + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
-
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
+        data = _query_openverse_once(params)
+        if not data.get("results") and "category" in params:
+            # Openverse audio items often omit category tags; retry unfiltered before giving up
+            params.pop("category", None)
+            data = _query_openverse_once(params)
     except Exception as e:
         print(f"[OPENVERSE_SFX] API query error for '{query}': {e}", file=sys.stderr)
         return []
@@ -165,7 +169,7 @@ def main():
     parser.add_argument("--search", type=str, help="Search Openverse audio and print matches without downloading")
     parser.add_argument("--sfx", type=str, help="Comma-separated SFX cues/queries to fetch (e.g. whoosh,paper,stamp,typing)")
     parser.add_argument("--music", type=str, help="Ambient music / tension bed search query")
-    parser.add_argument("--category", type=str, default="sound_effect", help="Openverse category (sound_effect, music, all)")
+    parser.add_argument("--category", type=str, default="all", help="Openverse category (all, sound_effects, music)")
     parser.add_argument("--out", type=str, default="sound", help="Output directory for normalized 48kHz WAV files")
     args = parser.parse_args()
 

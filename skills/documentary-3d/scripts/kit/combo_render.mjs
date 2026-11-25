@@ -55,6 +55,7 @@ const puppeteerMod = req(pupPath);
 const puppeteer = puppeteerMod.default || puppeteerMod;
 
 const projectRoot = args.project ? path.resolve(String(args.project)) : process.cwd();
+const explicitPhotoPath = args.photo && fs.existsSync(path.resolve(String(args.photo))) ? path.resolve(String(args.photo)) : null;
 const MIME = {
   '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript',
   '.json': 'application/json', '.md': 'text/plain', '.png': 'image/png',
@@ -64,10 +65,17 @@ const MIME = {
 
 const server = http.createServer((reqHttp, res) => {
   const urlPath = decodeURIComponent(reqHttp.url.split('?')[0]);
+  if (urlPath === '/favicon.ico') {
+    res.writeHead(204);
+    return res.end();
+  }
   let fsPath = null;
   let allowedBase = null;
 
-  if (urlPath.startsWith('/three/')) {
+  if (urlPath === '/local-photo' && explicitPhotoPath) {
+    allowedBase = path.dirname(explicitPhotoPath);
+    fsPath = explicitPhotoPath;
+  } else if (urlPath.startsWith('/three/')) {
     allowedBase = threeDir;
     fsPath = path.join(threeDir, urlPath.slice('/three/'.length));
   } else if (urlPath.startsWith('/plugin/')) {
@@ -77,8 +85,14 @@ const server = http.createServer((reqHttp, res) => {
     allowedBase = projectRoot;
     fsPath = path.join(projectRoot, urlPath.slice(1));
   } else {
-    allowedBase = KIT_DIR;
-    fsPath = path.join(KIT_DIR, urlPath.replace(/^\/+/, ''));
+    const candProj = path.join(projectRoot, urlPath.replace(/^\/+/, ''));
+    if (fs.existsSync(candProj) && !fs.statSync(candProj).isDirectory() && /\.(png|jpe?g|webp|gif)$/i.test(candProj)) {
+      allowedBase = projectRoot;
+      fsPath = candProj;
+    } else {
+      allowedBase = KIT_DIR;
+      fsPath = path.join(KIT_DIR, urlPath.replace(/^\/+/, ''));
+    }
   }
 
   if (!fsPath.startsWith(allowedBase) || !fs.existsSync(fsPath) || fs.statSync(fsPath).isDirectory()) {
@@ -137,7 +151,7 @@ const qs = new URLSearchParams({
   post: String(args.post || 'hdr'),
   total: String(args.total || '6')
 });
-if (args.photo) qs.set('photo', String(args.photo));
+if (args.photo) qs.set('photo', explicitPhotoPath ? '/local-photo' : String(args.photo));
 
 await page.goto(`http://127.0.0.1:${port}/combo_stage.html?${qs.toString()}`, { waitUntil: 'load' });
 await page.waitForFunction('window.__ready === true', { timeout: 120000 });

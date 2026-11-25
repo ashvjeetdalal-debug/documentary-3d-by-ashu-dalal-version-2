@@ -4,6 +4,7 @@
 // Flags: --story f --scale 0.5 --gpu --chrome --mb N (motion-blur sub-frames) --stills 1,2 --from-frame a --to-frame b --silent path --quiet
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import http from 'node:http';
 import { spawn } from 'node:child_process';
@@ -33,9 +34,25 @@ fs.writeFileSync(path.join(project, 'build/meta.json'), JSON.stringify({ duratio
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json',
   '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.svg': 'image/svg+xml',
   '.woff2': 'font/woff2', '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.glb': 'model/gltf-binary', '.gltf': 'model/gltf+json', '.bin': 'application/octet-stream' };
+const pluginRootCandidates = [
+  process.env.ASHU_PLUGIN_ROOT,
+  path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '../../../..'),
+  path.resolve(project, '../..'),
+  path.resolve(project, '..'),
+  path.join(os.homedir(), '.gemini', 'config', 'plugins', 'documentary-3d-by-ashu-dalal-version-3'),
+  path.join(os.homedir(), '.gemini', 'config', 'plugins', 'documentary-3d-by-ashu-dalal-version-2')
+].filter(Boolean);
+const pluginRoot = pluginRootCandidates.find((d) => fs.existsSync(path.join(d, 'plugin.json')) || fs.existsSync(path.join(d, 'skills', 'documentary-3d')));
 const server = http.createServer((req, res) => {
-  const p = path.normalize(path.join(project, decodeURIComponent(new URL(req.url, 'http://x').pathname)));
-  if (!p.startsWith(project) || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
+  const urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  if (urlPath === '/favicon.ico') { res.writeHead(204); return res.end(); }
+  let base = project;
+  let p = path.normalize(path.join(project, urlPath));
+  if (urlPath.startsWith('/plugin/') && pluginRoot) {
+    base = pluginRoot;
+    p = path.normalize(path.join(pluginRoot, urlPath.slice('/plugin/'.length)));
+  }
+  if (!p.startsWith(base) || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end(); }
   res.writeHead(200, { 'Content-Type': MIME[path.extname(p)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
   fs.createReadStream(p).pipe(res);
 });

@@ -32,19 +32,20 @@ Build narrated cinematic documentary videos in code, preserving the **original A
 - Ask the operator for the voiceover audio file (`.wav`/`.mp3`), or offer to generate the voiceover. Receive audio before building scenes.
 
 ### Step 3: Multi-Source Original Internet & Social Asset Sourcing (NO FAKE ASSETS)
-- If assets are not provided, **immediately upon receiving audio**, fetch real historical photos, maps, diagrams, documents, and authentic social/news media stills using [`asset_fetcher.py`](scripts/asset_fetcher.py) (Wikimedia Commons, Wikipedia, Openverse Images, Internet Archive, Reddit public media, plus `--from-urls` for verified URLs found during Step 1 web/social research).
+- If assets are not provided, **immediately upon receiving audio**, fetch real historical photos, maps, diagrams, documents, and authentic social/news media stills using [`asset_fetcher.py`](scripts/asset_fetcher.py) (Wikimedia Commons, Wikipedia, Openverse Images, Internet Archive, Library of Congress, NASA Images, plus `--from-urls` for verified URLs found during Step 1 web/social research).
 - Verify every downloaded asset with PIL (min 400×300, non-corrupt, clean RGB). **NO fake assets, NO synthetic cartoon slop, NO fabricated news logos.** Pass `--tags` with bilingual/phonetic aliases if voiceover is Hindi/Hinglish.
 
 ### Step 4: WhisperX Word-Level Alignment, Asset Mapping & Gap Detection
-- Execute [`audio_sync.py`](scripts/audio_sync.py) using **WhisperX** (`whisperx` primary, `openai-whisper` fallback) to align every spoken word to exact millisecond timestamps.
+- Execute [`audio_sync.py`](scripts/audio_sync.py) using **WhisperX** (`whisperx` primary, `faster-whisper` & `openai-whisper` fallbacks) to align every spoken word to exact millisecond timestamps.
 - Map each verified archival asset to the exact words/sentences where it belongs.
 - Identify empty segments where **no archival asset exists** (`gap_segments` via [`director_workflow.py`](scripts/director_workflow.py)).
 
 ### Step 5 & Substep 5(1): Interactive Consultation for No-Asset Gaps
 - For the empty *"khali"* segments lacking archival photos, ask the operator which visual engine and style to design with:
-  1. **Lemo-Opuscar Studio** (`skills/lemo-opuscar/styles/`, 100 film styles)
+  1. **Lemo-Opuscar Studio** (`skills/lemo-opuscar/styles/`, 99 film styles)
   2. **p5.brush** (`skills/p5-brush/`, charcoal, watercolor, pencils, cross-hatching, markers, flow fields)
   3. **3D-Animator / Three.js** (`scripts/kit/` 12 shader looks: `lit`, `clay`, `blueprint`, `paper`, `shadow`, `toon`, `synth`, `chrome`, `voxel`, `thermal`, `neon`, `mix`)
+  4. **Combined Hybrid Mode** (`studio.py --combo` — see `../../guides/COMBINATIONS.md`) + optional `vintage_engine.py`
 - Always share the recommended style list alongside the options. **If the operator asks for more styles, provide additional styles from `skills/documentary-3d/references/film-styles-catalog.md` / `skills/lemo-opuscar/styles/`.**
 
 ---

@@ -81,7 +81,35 @@ def align_audio_whisper(audio_path, model_size="base", language=None):
         except Exception as e:
             print(f"[AUDIO_SYNC] WhisperX runtime encountered: {e}. Falling back to Whisper...")
 
-    # 2. Fallback to OpenAI Whisper (with word_timestamps=True)
+    # 2. Try faster-whisper if installed
+    try:
+        from faster_whisper import WhisperModel
+        print("[AUDIO_SYNC] Utilizing faster-whisper alignment engine...")
+        m = WhisperModel(model_size, device="cpu", compute_type="int8")
+        segs, info = m.transcribe(audio_path, language=language, word_timestamps=True)
+        timeline["engine"] = "faster-whisper"
+        timeline["language"] = getattr(info, "language", language or "auto")
+        for seg in segs:
+            timeline["segments"].append({
+                "start": round(seg.start, 3),
+                "end": round(seg.end, 3),
+                "text": seg.text.strip()
+            })
+            for w in (seg.words or []):
+                timeline["words"].append({
+                    "word": w.word.strip(),
+                    "start": round(w.start, 3),
+                    "end": round(w.end, 3),
+                    "probability": round(getattr(w, "probability", 1.0), 2)
+                })
+        print(f"[AUDIO_SYNC] faster-whisper complete: {len(timeline['words'])} words mapped.")
+        return build_subtitles_and_cues(timeline)
+    except ImportError:
+        pass
+    except Exception as e:
+        print(f"[AUDIO_SYNC] faster-whisper runtime notice: {e}. Falling back to openai-whisper...")
+
+    # 3. Fallback to OpenAI Whisper (with word_timestamps=True)
     print("[AUDIO_SYNC] Running OpenAI Whisper word-level alignment engine...")
     import whisper
     model = whisper.load_model(model_size)

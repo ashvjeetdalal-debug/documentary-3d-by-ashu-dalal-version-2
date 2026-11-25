@@ -1,6 +1,6 @@
-# 101 Film Styles Catalog (Lemo-Opuscar Studio)
+# 99 Film Styles Catalog (Lemo-Opuscar Studio)
 
-This reference catalogs all 101 code-driven styles bundled inside this plugin under `skills/lemo-opuscar/styles/`.
+This reference catalogs all 99 code-driven styles (plus `_template`) bundled inside this plugin under `skills/lemo-opuscar/styles/`.
 
 | Style Name | Description / Aesthetic | Keywords |
 | :--- | :--- | :--- |

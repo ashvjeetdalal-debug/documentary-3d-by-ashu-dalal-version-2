@@ -23,7 +23,7 @@ from PIL import Image
 USER_AGENT = "Documentary3D-AshuDalal/3.0 (Archival Research Client; contact@antigravity.ai)"
 
 
-def _http_get_json(url, timeout=18):
+def _http_get_json(url, timeout=25):
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8"))
@@ -126,36 +126,98 @@ def search_openverse_images(query, limit=4):
 
 
 def search_internet_archive(query, limit=3):
-    """Search Internet Archive historical image items."""
+    """Search Internet Archive historical image items with strict title/subject filtering to avoid off-topic albums."""
     try:
         url = "https://archive.org/advancedsearch.php?" + urllib.parse.urlencode({
-            "q": f"({query}) AND mediatype:image",
+            "q": f'title:("{query}") AND mediatype:image',
             "fl[]": "identifier,title",
-            "rows": str(limit),
+            "rows": str(limit * 2),
             "page": "1",
             "output": "json"
         })
         data = _http_get_json(url)
         out = []
+        q_low = query.lower()
         for doc in data.get("response", {}).get("docs", []):
             ident = doc.get("identifier")
-            if ident:
-                out.append({
-                    "title": doc.get("title") or ident,
-                    "url": f"https://archive.org/services/img/{ident}",
-                    "source": "internet_archive",
-                    "license": "public_archive",
-                    "foreign_landing_url": f"https://archive.org/details/{ident}",
-                    "query": query
-                })
+            title = str(doc.get("title") or ident or "")
+            if not ident or any(bad in title.lower() for bad in ("album_", "song_", "dangers_of")):
+                continue
+            if not any(tok in title.lower() or tok in ident.lower() for tok in q_low.split() if len(tok) >= 3):
+                continue
+            out.append({
+                "title": title,
+                "url": f"https://archive.org/services/img/{ident}",
+                "source": "internet_archive",
+                "license": "public_archive",
+                "foreign_landing_url": f"https://archive.org/details/{ident}",
+                "query": query
+            })
+            if len(out) >= limit:
+                break
         return out
     except Exception as e:
         print(f"[ASSET_FETCHER] Archive.org error for '{query}': {e}")
         return []
 
 
+def search_nasa_images(query, limit=3):
+    """Search NASA Images API (images-api.nasa.gov) for aerospace, satellite, and tech photography."""
+    try:
+        url = "https://images-api.nasa.gov/search?" + urllib.parse.urlencode({
+            "q": query, "media_type": "image", "page_size": str(limit)
+        })
+        data = _http_get_json(url)
+        out = []
+        for item in data.get("collection", {}).get("items", []):
+            d0 = (item.get("data") or [{}])[0]
+            links = item.get("links") or []
+            u = next((l.get("href") for l in links if l.get("href")), None)
+            if u:
+                out.append({
+                    "title": d0.get("title") or query,
+                    "url": u,
+                    "source": "nasa_images",
+                    "license": "public_domain",
+                    "foreign_landing_url": f"https://images.nasa.gov/details/{d0.get('nasa_id', '')}",
+                    "query": query
+                })
+        return out[:limit]
+    except Exception as e:
+        print(f"[ASSET_FETCHER] NASA Images notice for '{query}': {e}")
+        return []
+
+
+def search_loc_photos(query, limit=3):
+    """Search US Library of Congress Prints & Photographs public JSON API."""
+    try:
+        url = "https://www.loc.gov/photos/?" + urllib.parse.urlencode({
+            "q": query, "fo": "json", "c": str(limit)
+        })
+        data = _http_get_json(url)
+        out = []
+        for item in data.get("results", []):
+            imgs = item.get("image_url") or []
+            u = imgs[-1] if imgs else None
+            if u and not u.startswith("http"):
+                u = "https:" + u
+            if u:
+                out.append({
+                    "title": item.get("title") or query,
+                    "url": u,
+                    "source": "library_of_congress",
+                    "license": "public_archive",
+                    "foreign_landing_url": item.get("id") or u,
+                    "query": query
+                })
+        return out[:limit]
+    except Exception as e:
+        print(f"[ASSET_FETCHER] LoC notice for '{query}': {e}")
+        return []
+
+
 def search_reddit_public_media(query, limit=4):
-    """Search public Reddit posts for real shared archival photos, screenshots, or event media."""
+    """Best-effort Reddit public media search (falls back gracefully when Reddit blocks non-OAuth clients)."""
     try:
         url = "https://www.reddit.com/search.json?" + urllib.parse.urlencode({
             "q": query, "limit": str(limit * 2), "sort": "relevance"
@@ -175,8 +237,8 @@ def search_reddit_public_media(query, limit=4):
                     "query": query
                 })
         return out[:limit]
-    except Exception as e:
-        print(f"[ASSET_FETCHER] Reddit search notice for '{query}': {e}")
+    except Exception:
+        # Reddit often returns HTTP 403 to CLI HTTP clients; rely on --from-urls from AI web search instead.
         return []
 
 
@@ -228,7 +290,7 @@ def auto_fetch_assets_for_topic(topic_or_keywords, dest_dir, max_assets=8, sourc
     """
     os.makedirs(dest_dir, exist_ok=True)
     queries = [q.strip() for q in topic_or_keywords.split(",") if q.strip()] if isinstance(topic_or_keywords, str) else list(topic_or_keywords)
-    enabled = set(s.strip().lower() for s in sources.split(",")) if sources != "all" else {"wikimedia", "wikipedia", "openverse", "archive", "reddit"}
+    enabled = set(s.strip().lower() for s in sources.split(",")) if sources != "all" else {"wikimedia", "wikipedia", "openverse", "archive", "loc", "nasa"}
 
     downloaded = []
     seen_urls = set()
@@ -271,6 +333,10 @@ def auto_fetch_assets_for_topic(topic_or_keywords, dest_dir, max_assets=8, sourc
             per_source.append(search_wikipedia_media(q, limit=2))
         if "wikimedia" in enabled:
             per_source.append(search_wikimedia_commons(q, limit=3))
+        if "loc" in enabled:
+            per_source.append(search_loc_photos(q, limit=2))
+        if "nasa" in enabled:
+            per_source.append(search_nasa_images(q, limit=2))
         if "reddit" in enabled:
             per_source.append(search_reddit_public_media(q, limit=2))
 

@@ -105,12 +105,14 @@ def main():
     parser.add_argument("--video", action="store_true", help="Render MP4 video in --combo mode")
     parser.add_argument("--audio", type=str, help="Mastered audio track to mux in --combo mode")
     parser.add_argument("--handheld-csv", type=str, help="Motion CSV for real handheld camera shake pass")
+    parser.add_argument("--project", type=str, default="", help="Project folder path for --combo /assets resolution")
     parser.add_argument("--workflow", action="store_true", help="Show the canonical 5-Step Director Workflow")
     parser.add_argument("--suggest-topics", action="store_true", help="Step 1: Print curated documentary topics")
     parser.add_argument("--list-gap-styles", action="store_true", help="Step 5(1): List styles for the 3 gap fallback engines")
     parser.add_argument("--sync-audio", type=str, help="Step 4: Run WhisperX / Whisper word-level alignment on audio")
     parser.add_argument("--fetch-assets", type=str, help="Step 3: Download & verify real internet/social assets (multi-source)")
-    parser.add_argument("--sources", type=str, default="all", help="Sources for --fetch-assets (all or wikimedia,wikipedia,openverse,archive,reddit)")
+    parser.add_argument("--max", type=int, default=8, help="Max assets to download for --fetch-assets")
+    parser.add_argument("--sources", type=str, default="all", help="Sources for --fetch-assets (all or wikimedia,wikipedia,openverse,archive,loc,nasa)")
     parser.add_argument("--from-urls", type=str, default="", help="Comma-separated direct image URLs found via full web/social research")
     parser.add_argument("--tags", type=str, default="", help="Bilingual/phonetic alias tags for --fetch-assets (for WhisperX Hindi/Hinglish sync)")
     parser.add_argument("--fetch-sfx", type=str, help="Openverse: Fetch real CC-licensed SFX (comma-separated, e.g. whoosh,paper,stamp)")
@@ -118,6 +120,7 @@ def main():
     parser.add_argument("--sound-mode", type=str, choices=["openverse", "legacy_synth"], help="Switch default sound engine between openverse and legacy_synth")
     parser.add_argument("--auto-intake", type=str, help="Run Step 4 WhisperX sync intake on audio file")
     parser.add_argument("--render-board", action="store_true", help="PRIMARY: Render Evidence Board via board_engine.py")
+    parser.add_argument("--script", type=str, default="", help="Custom project board_engine.py script path for --render-board")
     parser.add_argument("--render-3d", action="store_true", help="GAP FALLBACK: Render Three.js 3D scene via headless Chrome")
     parser.add_argument("--render-brush", action="store_true", help="GAP FALLBACK: Render p5.brush animation via headless Chrome")
     parser.add_argument("--style", type=str, default="lit", help="Style name for 3D render")
@@ -152,6 +155,8 @@ def main():
         ]
         if args.photo:
             cmd.append(f"--photo={args.photo}")
+        if args.project:
+            cmd.append(f"--project={args.project}")
         if args.stills:
             cmd.append(f"--stills={args.stills}")
         elif args.video:
@@ -200,7 +205,7 @@ def main():
     if args.fetch_assets:
         fetch_script = os.path.join(DOC_SCRIPTS, "asset_fetcher.py")
         out_dir = args.out if not args.out.endswith(".mp4") else "assets"
-        cmd = [sys.executable, fetch_script, "--query", args.fetch_assets, "--out", out_dir, "--sources", args.sources]
+        cmd = [sys.executable, fetch_script, "--query", args.fetch_assets, "--out", out_dir, "--max", str(args.max), "--sources", args.sources]
         if args.from_urls:
             cmd.extend(["--from-urls", args.from_urls])
         if args.tags:
@@ -214,18 +219,21 @@ def main():
         return
 
     if args.render_board:
-        cmd = [sys.executable, "board_engine.py"]
+        board_script = os.path.abspath(args.script) if args.script else os.path.join(DOC_SCRIPTS, "board_engine.py")
+        cmd = [sys.executable, board_script]
         if args.stills:
             cmd.extend(["stills", args.stills])
         else:
             cmd.extend(["full", "0", "300", args.out])
-        subprocess.run(cmd, cwd=DOC_SCRIPTS, check=True)
+        subprocess.run(cmd, cwd=os.path.dirname(board_script), check=True)
         return
 
     if args.render_3d:
         cmd = ["node", "render.mjs"]
         if args.stills:
             cmd.append(f"--stills={args.stills}")
+            if args.style:
+                cmd.append(f"--style={args.style}")
             if args.out != "out/final.mp4":
                 cmd.append(f"--out={args.out}")
         else:

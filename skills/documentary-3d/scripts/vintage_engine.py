@@ -1,12 +1,85 @@
-import numpy as np, cv2, math, subprocess
+import numpy as np, math, os, subprocess
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
+
+try:
+    import cv2
+except ImportError:
+    class _Cv2Compat:
+        COLOR_RGB2BGR = 4
+        BORDER_REFLECT = 4
+
+        @staticmethod
+        def line(arr, pt1, pt2, color, thickness=1):
+            im = Image.fromarray(arr)
+            ImageDraw.Draw(im).line([pt1, pt2], fill=tuple(color), width=thickness)
+            arr[:] = np.array(im)
+
+        @staticmethod
+        def circle(arr, center, radius, color, thickness=-1):
+            im = Image.fromarray(arr)
+            x, y = center
+            d = ImageDraw.Draw(im)
+            if thickness < 0:
+                d.ellipse([x - radius, y - radius, x + radius, y + radius], fill=tuple(color))
+            else:
+                d.ellipse([x - radius, y - radius, x + radius, y + radius], outline=tuple(color), width=thickness)
+            arr[:] = np.array(im)
+
+        @staticmethod
+        def warpAffine(arr, M, dsize, borderMode=0):
+            M3 = np.vstack([np.asarray(M, dtype=np.float64), [0.0, 0.0, 1.0]])
+            inv = np.linalg.inv(M3)[:2].flatten()
+            return np.array(Image.fromarray(arr).transform(dsize, Image.AFFINE, tuple(inv), resample=Image.BILINEAR))
+
+        @staticmethod
+        def GaussianBlur(arr, ksize, sigmaX):
+            sq = arr.squeeze()
+            u8 = np.clip(sq * 255.0, 0, 255).astype(np.uint8) if sq.dtype != np.uint8 else sq
+            res = np.array(Image.fromarray(u8).filter(ImageFilter.GaussianBlur(radius=sigmaX)))
+            return (res.astype(np.float32) / 255.0) if sq.dtype != np.uint8 else res
+
+        @staticmethod
+        def cvtColor(arr, code):
+            out = arr.copy()
+            out[..., [0, 2]] = out[..., [2, 0]]
+            return out
+
+        @staticmethod
+        def imwrite(path, arr):
+            Image.fromarray(arr[..., ::-1]).save(path)
+    cv2 = _Cv2Compat()
+
+def _find_font(candidates):
+    for p in candidates:
+        if os.path.exists(p):
+            return p
+    return None
+
 W, H, FPS = 1920, 1080, 30
 T0, T1 = 1896/30, 2149/30          # 63.2 -> 71.63
-MONO = "/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf"
-SERIF = "/usr/share/fonts/truetype/crosextra/Caladea-Bold.ttf"
+MONO = _find_font([
+    "/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf",
+    r"C:\Windows\Fonts\consolab.ttf",
+    r"C:\Windows\Fonts\courbd.ttf",
+    r"C:\Windows\Fonts\consola.ttf",
+    "/System/Library/Fonts/Menlo.ttc",
+])
+SERIF = _find_font([
+    "/usr/share/fonts/truetype/crosextra/Caladea-Bold.ttf",
+    r"C:\Windows\Fonts\georgiab.ttf",
+    r"C:\Windows\Fonts\cambriab.ttf",
+    r"C:\Windows\Fonts\timesbd.ttf",
+    "/System/Library/Fonts/Times.ttc",
+])
 INK = (52, 38, 26); PAPER = (226, 208, 172); MID = (150, 124, 92); DARK = (88, 66, 46); RED = (178, 40, 32)
 rng = np.random.default_rng(7)
-def F(p, s): return ImageFont.truetype(p, int(s))
+def F(p, s):
+    if p and os.path.exists(p):
+        try:
+            return ImageFont.truetype(p, int(s))
+        except Exception:
+            pass
+    return ImageFont.load_default()
 def cl(x, a=0, b=1): return max(a, min(b, x))
 def ease(x): x = cl(x); return x*x*(3-2*x)
 def J(t, k, a=2.0):  # boiling-line jitter, changes on twos (12 fps)

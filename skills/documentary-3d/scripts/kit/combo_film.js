@@ -33,8 +33,9 @@ function loadTextureAsync(url) {
 
 export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMode, photoUrl, totalSec }) {
   const stageCanvas = document.getElementById('stage');
-  // Separate GL source canvas if CRT WebGL2 pass owns stageCanvas
-  const glCanvas = postMode === 'crt' ? Object.assign(document.createElement('canvas'), { width: W, height: H }) : stageCanvas;
+  // Keep stageCanvas free for 2D blitting whenever HDR accumulation or CRT WebGL2 post owns stageCanvas
+  const useOffscreenGl = (postMode === 'crt' || postMode === 'hdr' || postMode === 'none');
+  const glCanvas = useOffscreenGl ? Object.assign(document.createElement('canvas'), { width: W, height: H }) : stageCanvas;
 
   const renderer = new THREE.WebGLRenderer({
     canvas: glCanvas,
@@ -186,10 +187,20 @@ export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMo
   });
 
   const styleTimeline = parseStyleSpec(styleSpec);
-  const brushPalette = lemo ? [lemo.isDark ? '#1a202c' : '#f4efe4', inkHex, accentHex] : ['#f4efe4', '#222836', '#d0312d'];
+  const baseBrushPalette = lemo ? [lemo.isDark ? '#1a202c' : '#f4efe4', inkHex, accentHex] : ['#f4efe4', '#222836', '#d0312d'];
+  const SHADER_BRUSH_PALETTES = {
+    blueprint: ['#071a45', '#dcebff', '#3d64b8'],
+    synth: ['#16072d', '#36efff', '#ff43db'],
+    shadow: ['#140804', '#ffd27e', '#d9802f'],
+    thermal: ['#080020', '#ffad18', '#ff3438'],
+    neon: ['#0a0d1a', '#88aaff', '#ff5745']
+  };
 
   const SHUTTER = 0.5 / 30;
-  const offCtx = postMode === 'hdr' ? Object.assign(document.createElement('canvas'), { width: W, height: H }).getContext('2d') : null;
+  const offCtx = (postMode === 'hdr' || postMode === 'none')
+    ? Object.assign(document.createElement('canvas'), { width: W, height: H }).getContext('2d')
+    : null;
+  const stageCtx2d = useOffscreenGl && postMode !== 'crt' ? stageCanvas.getContext('2d') : null;
 
   function renderSubframe(tSub) {
     const p = clamp(tSub / totalSec, 0, 1);
@@ -202,11 +213,12 @@ export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMo
     ringMesh.rotation.x = Math.PI * 0.35 + tSub * 0.5;
     ringMesh.rotation.y = -tSub * 0.4;
 
+    const activeStyle = styleAt(styleTimeline, tSub, 'lit');
     if (brushTarget) {
-      brushTarget.update(tSub, brushPreset, brushPalette);
+      const activeBrushPalette = (!lemo && SHADER_BRUSH_PALETTES[activeStyle]) ? SHADER_BRUSH_PALETTES[activeStyle] : baseBrushPalette;
+      brushTarget.update(tSub, brushPreset, activeBrushPalette);
     }
 
-    const activeStyle = styleAt(styleTimeline, tSub, 'lit');
     setStyle(activeStyle, { scene, key, fill, renderer });
 
     // Single Eased Camera Curve
@@ -229,22 +241,24 @@ export async function bootCombo({ W, H, styleSpec, brushPreset, lemoSlug, postMo
     const samples = (postCtrl.mode === 'gtao' || postCtrl.mode === 'crt') ? 1 : Math.max(1, n);
     if (samples === 1 || !offCtx) {
       renderSubframe(t);
+      if (stageCtx2d) {
+        stageCtx2d.clearRect(0, 0, W, H);
+        stageCtx2d.drawImage(glCanvas, 0, 0);
+      }
       return;
     }
     const accum = offCtx;
-    const dest = stageCanvas.getContext('2d');
     accum.clearRect(0, 0, W, H);
     for (let s = 0; s < samples; s++) {
       const dt = (halton(s + 1, 2) - 0.5) * SHUTTER;
       renderSubframe(Math.max(0, t + dt));
-      if (s === 0) {
-        accum.globalAlpha = 1;
-        accum.drawImage(glCanvas, 0, 0);
-      } else {
-        accum.globalAlpha = 1 / (s + 1);
-        accum.drawImage(glCanvas, 0, 0);
-      }
+      accum.globalAlpha = s === 0 ? 1 : 1 / (s + 1);
+      accum.drawImage(glCanvas, 0, 0);
     }
-    if (dest) dest.drawImage(accum.canvas, 0, 0);
+    accum.globalAlpha = 1;
+    if (stageCtx2d) {
+      stageCtx2d.clearRect(0, 0, W, H);
+      stageCtx2d.drawImage(accum.canvas, 0, 0);
+    }
   };
 }

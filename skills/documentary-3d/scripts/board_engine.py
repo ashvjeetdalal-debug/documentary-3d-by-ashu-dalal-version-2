@@ -1,5 +1,58 @@
-import numpy as np, cv2, math, sys, subprocess, os
+import numpy as np, math, sys, subprocess, os
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
+
+try:
+    import cv2
+except ImportError:
+    class _Cv2Compat:
+        COLOR_BGR2GRAY = 1
+        COLOR_RGBA2BGRA = 2
+        COLOR_BGR2RGB = 3
+        COLOR_RGB2BGR = 4
+        INTER_LINEAR = 1
+        INTER_CUBIC = 3
+
+        @staticmethod
+        def imread(path):
+            return np.array(Image.open(path).convert("RGB"))[..., ::-1].copy()
+
+        @staticmethod
+        def cvtColor(arr, code):
+            if code in (2, 3, 4):
+                out = arr.copy()
+                out[..., [0, 2]] = out[..., [2, 0]]
+                return out
+            if code == 1:
+                return (0.114 * arr[..., 0] + 0.587 * arr[..., 1] + 0.299 * arr[..., 2]).astype(arr.dtype)
+            return arr
+
+        @staticmethod
+        def resize(arr, dsize, interpolation=1):
+            resamp = Image.BICUBIC if interpolation == 3 else Image.BILINEAR
+            if arr.ndim == 2:
+                return np.array(Image.fromarray((arr * 255).astype(np.uint8) if arr.dtype != np.uint8 else arr).resize(dsize, resamp)).astype(arr.dtype) / (255.0 if arr.dtype != np.uint8 else 1)
+            return np.array(Image.fromarray(arr.astype(np.uint8)).resize(dsize, resamp)).astype(arr.dtype)
+
+        @staticmethod
+        def GaussianBlur(arr, ksize, sigmaX):
+            u8 = np.clip(arr * 255.0, 0, 255).astype(np.uint8) if arr.dtype != np.uint8 else arr
+            res = np.array(Image.fromarray(u8).filter(ImageFilter.GaussianBlur(radius=sigmaX)))
+            return (res.astype(np.float32) / 255.0) if arr.dtype != np.uint8 else res
+
+        @staticmethod
+        def warpAffine(arr, M, dsize, flags=1, borderValue=0):
+            M3 = np.vstack([np.asarray(M, dtype=np.float64), [0.0, 0.0, 1.0]])
+            inv = np.linalg.inv(M3)[:2].flatten()
+            resamp = Image.BICUBIC if flags == 3 else Image.BILINEAR
+            fill = tuple(int(v) for v in borderValue) if isinstance(borderValue, (tuple, list)) else int(borderValue)
+            return np.array(Image.fromarray(arr).transform(dsize, Image.AFFINE, tuple(inv), resample=resamp, fillcolor=fill))
+    cv2 = _Cv2Compat()
+
+def _find_font(candidates):
+    for p in candidates:
+        if os.path.exists(p):
+            return p
+    return None
 
 A = "/mnt/user-data/attachments/b9ecba84-ee6d-5a3b-a63d-23d7e25b8125/"
 IMG = {k: A + v for k, v in dict(post="38dab578-image.jpg", ff="6422fd14-image.jpg", soph="d2faf258-image.jpg",
@@ -7,13 +60,31 @@ IMG = {k: A + v for k, v in dict(post="38dab578-image.jpg", ff="6422fd14-image.j
        ill2="380122a7-image.jpg", news="a284fceb-image.png", trial="b01c36ef-image.jpg").items()}
 W, H, FPS = 1920, 1080, 30
 DUR = 92.6
-MONO = "/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf"
-SERIF = "/usr/share/fonts/truetype/crosextra/Caladea-Bold.ttf"
+MONO = _find_font([
+    "/usr/share/fonts/truetype/freefont/FreeMonoBold.ttf",
+    r"C:\Windows\Fonts\consolab.ttf",
+    r"C:\Windows\Fonts\courbd.ttf",
+    r"C:\Windows\Fonts\consola.ttf",
+    "/System/Library/Fonts/Menlo.ttc",
+])
+SERIF = _find_font([
+    "/usr/share/fonts/truetype/crosextra/Caladea-Bold.ttf",
+    r"C:\Windows\Fonts\georgiab.ttf",
+    r"C:\Windows\Fonts\cambriab.ttf",
+    r"C:\Windows\Fonts\timesbd.ttf",
+    "/System/Library/Fonts/Times.ttc",
+])
 RED = (208, 49, 45)
 WW, WH = 5000, 4100
 R = 2.0  # card pixels per world unit
 
-def font(p, s): return ImageFont.truetype(p, int(s))
+def font(p, s):
+    if p and os.path.exists(p):
+        try:
+            return ImageFont.truetype(p, int(s))
+        except Exception:
+            pass
+    return ImageFont.load_default()
 def clamp(x, a=0, b=1): return max(a, min(b, x))
 def ss(x): x = clamp(x); return x * x * (3 - 2 * x)
 def ease(x): x = clamp(x); return 4*x*x*x if x < .5 else 1 - (-2*x+2)**3/2

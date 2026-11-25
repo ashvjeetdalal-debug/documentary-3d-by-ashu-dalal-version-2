@@ -95,7 +95,8 @@ def main():
     parser.add_argument("--brush", type=str, default="none", help="p5.brush preset (watercolor, charcoal, hatching, marker, flow_field, pencil_hb)")
     parser.add_argument("--lemo", type=str, default="none", help="Lemo-Opuscar style slug (e.g. dark-documentary, blueprint, archive-lighttable)")
     parser.add_argument("--post", type=str, default="hdr", choices=["hdr", "gtao", "crt", "none"], help="Clean single-pass post-FX")
-    parser.add_argument("--photo", type=str, default="", help="Optional /assets/... archival image mapped onto readable 3D card")
+    parser.add_argument("--photo", type=str, default="", help="Optional /assets/... or local file path mapped onto readable 3D card")
+    parser.add_argument("--project", type=str, default="", help="Optional project folder root for resolving /assets/...")
     parser.add_argument("--width", type=int, default=1920)
     parser.add_argument("--height", type=int, default=1080)
     parser.add_argument("--total", type=float, default=6.0)
@@ -120,6 +121,8 @@ def main():
     ]
     if args.photo:
         cmd.append(f"--photo={args.photo}")
+    if args.project:
+        cmd.append(f"--project={args.project}")
     if args.stills:
         cmd.append(f"--stills={args.stills}")
     elif args.video:

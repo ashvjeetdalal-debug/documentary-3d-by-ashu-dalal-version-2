@@ -1,7 +1,29 @@
 #!/usr/bin/env python3
-"""Procedural, copyright-free sound effects + ambient pad (numpy only). Writes build/sfx/<kind>.wav."""
-import argparse, json, os, wave
+"""Procedural, copyright-free sound effects + ambient pad (numpy only). Writes build/sfx/<kind>.wav.
+NOTE: SILENCED BY DEFAULT in Version 3 in favor of Openverse real SFX & music (openverse_sfx.py).
+To re-enable anytime: set "active_engine": "legacy_synth" in sound_config.json,
+export ASHU_SOUND_ENGINE=legacy_synth, or pass --force-legacy."""
+import argparse, json, os, sys, wave
 import numpy as np
+
+
+def _is_legacy_enabled():
+    if "--force-legacy" in sys.argv:
+        return True
+    env = os.environ.get("ASHU_SOUND_ENGINE", "").strip().lower()
+    if env:
+        return env == "legacy_synth"
+    here = os.path.dirname(os.path.abspath(__file__))
+    for cand in [
+        os.path.join(here, "sound_config.json"),
+        os.path.abspath(os.path.join(here, "..", "..", "..", "documentary-3d", "scripts", "sound_config.json")),
+    ]:
+        if os.path.exists(cand):
+            try:
+                return json.load(open(cand, encoding="utf-8")).get("active_engine") == "legacy_synth"
+            except Exception:
+                pass
+    return False
 
 SR = 48000
 rng = np.random.default_rng(7)
@@ -68,9 +90,22 @@ def write(path, x):
 
 
 if __name__ == '__main__':
-    ap = argparse.ArgumentParser(); ap.add_argument('--story', default='story.json'); ap.add_argument('--duration', type=float, default=30)
-    a = ap.parse_args(); story = json.load(open(a.story))
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--story', default='story.json')
+    ap.add_argument('--duration', type=float, default=30)
+    ap.add_argument('--force-legacy', action='store_true')
+    a = ap.parse_args()
+    story = json.load(open(a.story))
     os.makedirs('build/sfx', exist_ok=True)
+    if not _is_legacy_enabled():
+        print('[gen_sfx.py] Legacy synthetic SFX silenced by default (Openverse is active). Writing silent tracks; pass --force-legacy or switch sound_config.json to "legacy_synth" to re-enable.')
+        silent = np.zeros(int(SR * 0.25), dtype=np.float64)
+        for kind in {s['kind'] for s in story.get('sfx', []) if 'kind' in s}:
+            write(f'build/sfx/{kind}.wav', silent)
+        m = story.get('music')
+        if m and m.get('kind') == 'pad':
+            write('build/music_pad.wav', np.zeros(int(SR * min(a.duration, 2.0)), dtype=np.float64))
+        sys.exit(0)
     for kind in {s['kind'] for s in story.get('sfx', []) if 'kind' in s}:
         if kind not in KINDS: raise SystemExit(f'Unknown sfx kind "{kind}". Available: {", ".join(KINDS)}')
         write(f'build/sfx/{kind}.wav', KINDS[kind]())

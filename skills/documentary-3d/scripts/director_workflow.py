@@ -62,9 +62,10 @@ def get_lemo_styles(limit=15) -> List[Dict[str, str]]:
     # Curated selection of top documentary and explainer styles
     curated = [
         "dark-documentary", "archive-lighttable", "briefing-board", "blueprint",
-        "circuit-board", "comic-history", "claymation", "woodcut-print",
-        "sand-art", "origami-journey", "infrared-surveillance", "kinetic-typography",
-        "analog-film", "chalkboard-lecture", "copper-engraving"
+        "circuit-board", "comic-history", "halftone-dossier", "woodcut",
+        "watercolor", "ink-wash", "colored-pencil", "thermal-camera",
+        "text-flash-cuts", "silent-film", "chalkboard", "engraving",
+        "vintage-collage", "visual-investigation", "map-explainer", "lidar-survey"
     ]
     results = []
     for s in curated:
@@ -112,12 +113,15 @@ def suggest_documentary_topics() -> List[Dict[str, str]]:
 # -------------------------------------------------------------
 # STEP 3: ZERO-FAKE ORIGINAL ASSET SOURCING
 # -------------------------------------------------------------
-def execute_step3_asset_sourcing(topic_keywords: List[str], assets_dir: str, max_assets: int = 8) -> List[Dict[str, Any]]:
+def execute_step3_asset_sourcing(topic_keywords: List[str], assets_dir: str, max_assets: int = 8, sources: str = "all", extra_urls: List[str] = None, alias_tags: List[str] = None) -> List[Dict[str, Any]]:
     print("\n=======================================================")
-    print("STEP 3: ZERO-FAKE ARCHIVAL ASSET INTAKE")
-    print("Sourcing authentic historical media from Wikimedia Commons...")
+    print("STEP 3: MULTI-SOURCE INTERNET & SOCIAL ASSET INTAKE (ZERO FAKE ASSETS)")
+    print(f"Sourcing authentic media across [{sources}] + verified --from-urls...")
     print("=======================================================")
-    downloaded = asset_fetcher.auto_fetch_assets_for_topic(topic_keywords, assets_dir, max_assets=max_assets)
+    downloaded = asset_fetcher.auto_fetch_assets_for_topic(
+        topic_keywords, assets_dir, max_assets=max_assets,
+        sources=sources, extra_urls=extra_urls, alias_tags=alias_tags
+    )
     return downloaded
 
 # -------------------------------------------------------------
@@ -256,7 +260,7 @@ def main():
         for m in BRUSH_MEDIA:
             print(f"  --media={m['name']:12} : {m['desc']}")
 
-        print("\n3. LEMO-OPUSCAR FILM STYLES (100 STYLES AVAILABLE):")
+        print("\n3. LEMO-OPUSCAR FILM STYLES (99 STYLES AVAILABLE):")
         for s in get_lemo_styles(20):
             print(f"  --style={s['name']:20}")
         print("\n")
