@@ -123,7 +123,7 @@ def execute_step3_asset_sourcing(topic_keywords: List[str], assets_dir: str, max
 # -------------------------------------------------------------
 # STEP 4: WHISPERX WORD MAPPING & GAP ANALYSIS
 # -------------------------------------------------------------
-def execute_step4_audio_mapping_and_gaps(audio_path: str, assets_manifest: List[Dict[str, Any]], out_json: str) -> Dict[str, Any]:
+def execute_step4_audio_mapping_and_gaps(audio_path: str, assets_manifest: List[Dict[str, Any]], out_json: str, alias_map: Dict[str, List[str]] = None) -> Dict[str, Any]:
     print("\n=======================================================")
     print("STEP 4: WHISPERX FORCED WORD ALIGNMENT & ASSET MAPPING")
     print("Computing millisecond-accurate word timestamps...")
@@ -132,17 +132,24 @@ def execute_step4_audio_mapping_and_gaps(audio_path: str, assets_manifest: List[
     timeline = audio_sync.align_audio_whisper(audio_path, model_size="base")
     total_dur = timeline["duration"]
 
-    # Match assets to sentences based on keyword overlap
+    # Match assets to sentences using filename tokens, semantic manifest tags, and phonetic Hinglish aliases
     mapped_timeline = []
     occupied_intervals = []
+    alias_map = alias_map or {}
 
     for seg in timeline["segments"]:
         seg_text = seg["text"].lower()
+        seg_tokens = set(re.split(r'[^a-zA-Z0-9]+', seg_text))
         matched_asset = None
+
         for asset in assets_manifest:
-            title_words = [w.lower() for w in re.split(r'[^a-zA-Z0-9]', asset["filename"]) if len(w) > 3]
-            for tw in title_words:
-                if tw in seg_text:
+            fn_words = [w.lower() for w in re.split(r'[^a-zA-Z0-9]', asset.get("filename", "")) if len(w) > 3]
+            tag_words = [str(t).lower() for t in asset.get("tags", []) if len(str(t)) > 2]
+            extra_aliases = [str(a).lower() for a in alias_map.get(asset.get("filename", ""), [])]
+            all_keys = set(fn_words + tag_words + extra_aliases)
+
+            for key in all_keys:
+                if key in seg_tokens or (len(key) >= 4 and key in seg_text):
                     matched_asset = asset
                     break
             if matched_asset:

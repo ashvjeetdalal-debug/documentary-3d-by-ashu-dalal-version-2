@@ -24,16 +24,16 @@ Build narrated cinematic documentary videos in code, preserving the **original A
 
 ## 🎬 Canonical 5-Step Director Workflow
 
-### Step 1: Topic / Idea Selection & Script
+### Step 1: Full Internet + Social Media Research, Topic & Script
 - Present strong documentary topic ideas on historical events, covert operations, technology, or people.
-- Once the operator selects a topic, write a tightly paced documentary script (150 wpm, one visual per sentence, hook in first 3s).
+- **Full Research Rule**: Before writing the script on the chosen topic, search across **all internet sources** (news outlets, official/declassified archives, Wikipedia, academic/research sites) **AND social media platforms** (Reddit, X/Twitter, YouTube discussions, Instagram/TikTok angles, technical forums) to gather verified facts, human angles, and visual leads. Then write a tightly paced documentary script (150 wpm, one visual per sentence, hook in first 3s).
 
 ### Step 2: Voiceover Audio Intake
 - Ask the operator for the voiceover audio file (`.wav`/`.mp3`), or offer to generate the voiceover. Receive audio before building scenes.
 
-### Step 3: Real Original Internet Archival Asset Sourcing (NO FAKE ASSETS)
-- If assets are not provided, **immediately upon receiving audio**, fetch real historical photos, maps, diagrams, and documents using [`asset_fetcher.py`](scripts/asset_fetcher.py) (Wikimedia Commons / Wikipedia public archives).
-- Verify every downloaded asset with PIL (resolution, non-corrupt, RGB). **NO fake assets, NO synthetic cartoon slop, NO fabricated news logos.**
+### Step 3: Multi-Source Original Internet & Social Asset Sourcing (NO FAKE ASSETS)
+- If assets are not provided, **immediately upon receiving audio**, fetch real historical photos, maps, diagrams, documents, and authentic social/news media stills using [`asset_fetcher.py`](scripts/asset_fetcher.py) (Wikimedia Commons, Wikipedia, Openverse Images, Internet Archive, Reddit public media, plus `--from-urls` for verified URLs found during Step 1 web/social research).
+- Verify every downloaded asset with PIL (min 400×300, non-corrupt, clean RGB). **NO fake assets, NO synthetic cartoon slop, NO fabricated news logos.** Pass `--tags` with bilingual/phonetic aliases if voiceover is Hindi/Hinglish.
 
 ### Step 4: WhisperX Word-Level Alignment, Asset Mapping & Gap Detection
 - Execute [`audio_sync.py`](scripts/audio_sync.py) using **WhisperX** (`whisperx` primary, `openai-whisper` fallback) to align every spoken word to exact millisecond timestamps.

@@ -17,10 +17,12 @@ When authoring, editing, directing, or rendering films with this studio plugin, 
 
 ## 🎯 Canonical 5-Step Director Workflow (Mandatory)
 
-1. **Step 1 — Topic & Script**: Suggest documentary ideas/topics $\to$ operator chooses $\to$ write tight narrated script.
+1. **Step 1 — Full Internet & Social Media Research $\to$ Topic & Script**:
+   - Suggest documentary ideas/topics $\to$ operator chooses.
+   - **MANDATORY DEEP RESEARCH BEFORE SCRIPT**: Search the **full internet** (news outlets, official/government archives, historical/academic papers, Wikipedia) **AND social media platforms** (Reddit threads, X/Twitter public discussions, YouTube documentary/comment angles, Instagram/TikTok trends, HackerNews/forums) before drafting the script. Cite verified facts/dates/angles in a brief research summary alongside the tightly paced narrated script.
 2. **Step 2 — Voiceover Audio Intake**: Ask operator for voiceover audio (or generate if requested) before writing visual scenes.
-3. **Step 3 — Real Original Internet Assets First (NO FAKE ASSETS)**: As soon as audio arrives, if assets are not provided, run `asset_fetcher.py` to download real verified historical assets from Wikimedia Commons / Wikipedia. Zero AI slop, zero placeholder boxes, zero fabricated outlet logos.
-4. **Step 4 — WhisperX Forced Alignment & Gap Detection**: Run WhisperX (`audio_sync.py`, preferring `whisperx` repo) for exact word-level timestamps. Map verified assets to spoken words/sentences and isolate empty gap segments (*khali parts*).
+3. **Step 3 — Multi-Source Original Internet & Social Assets (NO FAKE ASSETS)**: As soon as audio arrives, if assets are not provided, fetch real verified historical/event media across **all public internet & social sources** via `asset_fetcher.py` (`wikimedia`, `wikipedia`, `openverse` images, `archive.org`, `reddit` public media + `--from-urls` extracted from AI web/social research). Zero AI slop, zero placeholder boxes, zero fabricated outlet logos. Include bilingual/phonetic alias `tags` in `assets_manifest.json`.
+4. **Step 4 — WhisperX Forced Alignment & Gap Detection**: Run WhisperX (`audio_sync.py`, preferring `whisperx` repo) for exact word-level timestamps. Match verified assets to spoken words/sentences using both `filename` AND semantic/phonetic `tags` aliases (so Hindi/Hinglish Whisper spellings match accurately) and isolate empty gap segments (*khali parts*).
 5. **Step 5 & 5(1) — Interactive Gap Visual Selection**: Present the empty gap timestamps to the operator and ask which visual engine to use from the 3 fallback tools:
    - **Lemo-Opuscar** (100 film styles)
    - **p5.brush** (charcoal, watercolor, pencil, hatching, marker, flow field)

@@ -25,7 +25,9 @@ Pacing: holds of 3–5 seconds early on, faster toward the climax. Tags fade abo
 | Digital Coda | Black, counters, particles | The modern turn |
 
 ## 4. Vintage 2D inserts (silent-film)
-Use for the dramatic action beat (an attack, a chase, a turning point) where no photo exists.
+> **Version 3 Note**: For segments where no archival asset exists (*"khali parts"*), always run Step 5(1) consultation first to let the operator choose among **Lemo-Opuscar**, **p5.brush**, **3D-Animator**, **Combined Hybrid**, or this classic **Vintage 2D** insert — and always source real verified archival photos from the full internet via `asset_fetcher.py`.
+
+Use for the dramatic action beat (an attack, a chase, a turning point) where no photo exists (when Vintage 2D is chosen).
 - **Palette:** sepia paper (226,208,172), ink (52,38,26); red only for the route, target circles, the subject label and the intertitle accents.
 - **Animate on twos** (12 fps steps) with boiling lines (re-jitter outlines each step). Switch to full 30 fps only for the impact moment.
 - **Film treatment:** sepia grade, grain σ≈13, flicker ±7%, 0–2 vertical scratches, dust specks, gate-weave jitter and a heavy vignette.

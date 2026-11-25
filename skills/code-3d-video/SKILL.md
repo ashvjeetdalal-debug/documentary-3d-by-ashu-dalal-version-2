@@ -25,10 +25,9 @@ voice recording (see `references/sound-and-voice.md`).
    says (each line has a fix). Never start building on a failing doctor.
 4. `npm run selftest` -> `out/selftest.mp4` plays with captions and sound.
 
-## Intake: never block on questions
-Ask at most ONE short question, and only if the topic is missing. Otherwise assume these defaults and state them in one line:
-9:16, 1080x1920, 30 fps, 30-45 s, look `noir` (night/mystery) / `day` (explainer) / `warm` (history/documentary) / `clean` (tech),
-voice supplied later (build a silent draft now), music `pad`.
+## Intake (Obeys Version 3 `rules/AGENTS.md` First)
+- **In Documentary Mode (default)**: Follow Version 3's 5-Step Workflow (`Topic + Full Internet/Social Research -> Script -> Audio Intake -> Multi-Source Real Assets -> WhisperX Alignment -> Gap Consultation`). Do NOT skip Step 2 audio or synthesize pad audio when Openverse is active.
+- **In Standalone Quick-Draft Mode** (only if user explicitly asks for a fast silent 3D test): Defaults are `9:16`, `1080x1920`, `30 fps`, `30-45 s`, look `noir` / `day` / `warm` / `clean`.
 
 ## Protocol (follow exactly; this is what makes it work first time)
 1. **Script** (`references/directing.md`): 150 wpm, one visual per sentence, hook in the first 3 s. Write it into `story.json -> script`.
