@@ -46,4 +46,5 @@ When authoring, editing, directing, or rendering films with this studio plugin, 
 - **Marks Synced to Speech**: Circles, underlines, and camera marks land within **1–2 frames (≤40 ms)** of the WhisperX trigger word. Captions/tags hold at least **1.8 s**.
 - **The Red Accent Rule**: `#d0312d` / RGB `(208, 49, 45)` strictly reserved for pins, strings/yarn, wobble circles, stamps, underlines, and climax thesis.
 - **Visual QA Gate**: Always generate contact sheets (`stills` / `npm run qa`) and inspect before final master renders.
+- **Modular Combinations (`guides/COMBINATIONS.md`)**: When combining engines (`3D-Animator`, `p5.brush`, `Lemo-Opuscar`, `code-3d-video`, `Evidence Board`), follow the 15 verified recipes in `guides/COMBINATIONS.md` (`studio.py --combo`), keep `preserveReadable = true` on archival documents/photos, and run only one post pass (`hdr` | `gtao` | `crt` | `none`) per shot.
 - **Non-Graphic Conflict**: Never depict gore, blood, or graphic wounds; use silhouettes, smoke, flash frames, and intertitles.

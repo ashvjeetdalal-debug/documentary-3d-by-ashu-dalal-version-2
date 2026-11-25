@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Universal Combo Stage (Version 3)</title>
+  <link rel="icon" href="data:,">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "/three/build/three.module.js",
+      "three/addons/": "/three/examples/jsm/"
+    }
+  }
+  </script>
+  <style>
+    html, body { margin: 0; padding: 0; background: #000; overflow: hidden; }
+    #stage { display: block; }
+  </style>
+</head>
+<body>
+  <canvas id="stage"></canvas>
+  <script type="module">
+    const q = new URLSearchParams(location.search);
+    const W = parseInt(q.get('width') || '1920', 10);
+    const H = parseInt(q.get('height') || '1080', 10);
+    const stage = document.getElementById('stage');
+    stage.width = W;
+    stage.height = H;
+    stage.style.width = `${W}px`;
+    stage.style.height = `${H}px`;
+
+    const mod = await import('./combo_film.js');
+    await mod.bootCombo({
+      W,
+      H,
+      styleSpec: q.get('style') || 'lit',
+      brushPreset: q.get('brush') || 'none',
+      lemoSlug: q.get('lemo') || 'none',
+      postMode: q.get('post') || 'hdr',
+      photoUrl: q.get('photo') || '',
+      totalSec: parseFloat(q.get('total') || '6')
+    });
+    window.__ready = true;
+
+    if (!q.has('render')) {
+      window.renderAt(parseFloat(q.get('t') || '2.0'), parseInt(q.get('n') || '4', 10));
+    }
+  </script>
+</body>
+</html>

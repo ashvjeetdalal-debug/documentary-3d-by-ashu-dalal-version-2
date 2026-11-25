@@ -68,7 +68,10 @@ def list_engines():
     styles_count = len([s for s in os.listdir(LEMO_STYLES) if os.path.isdir(os.path.join(LEMO_STYLES, s)) and not s.startswith(('_', '.'))]) if os.path.exists(LEMO_STYLES) else 0
     print(f"  6. Lemo-Opuscar Studio ({styles_count} styles in skills/lemo-opuscar/styles/)")
     print(f"  7. p5.brush Natural Media ({os.path.join(KIT_BRUSH, 'render_brush.mjs')})")
-    print(f"  8. 3D-Animator / Three.js ({os.path.join(KIT_3D, 'render.mjs')})\n")
+    print(f"  8. 3D-Animator / Three.js ({os.path.join(KIT_3D, 'render.mjs')})")
+    print("\n[UNIVERSAL MODULAR COMBINER - 15 TROUBLE-FREE COMBOS]")
+    print(f"  9. Combo Runner: {os.path.join(DOC_SCRIPTS, 'combo_runner.py')} (Guide: guides/COMBINATIONS.md)")
+    print("     Flags: --combo --shader=<look|timeline> --brush=<preset> --lemo=<slug> --post=<hdr|gtao|crt|none>\n")
 
 
 def list_styles():
@@ -88,6 +91,20 @@ def main():
     parser = argparse.ArgumentParser(description="Documentary 3D by Ashu Dalal Version 3 - Master Studio CLI")
     parser.add_argument("--list-engines", action="store_true", help="Show engine hierarchy and active sound mode")
     parser.add_argument("--list-styles", action="store_true", help="List all gap-only Lemo & 3D styles")
+    parser.add_argument("--list-combos", action="store_true", help="List all 15 verified modular combinations (see guides/COMBINATIONS.md)")
+    parser.add_argument("--combo", action="store_true", help="Run Universal Modular Combo Engine (combine 3D-Animator, p5.brush, Lemo, photos, handheld)")
+    parser.add_argument("--shader", type=str, default="lit", help="3D-Animator shader or timeline for --combo (e.g. paper or 0:lit,2.5:blueprint)")
+    parser.add_argument("--brush", type=str, default="none", help="p5.brush texture preset for --combo (watercolor, charcoal, hatching, marker, flow_field, pencil_hb)")
+    parser.add_argument("--lemo", type=str, default="none", help="Lemo-Opuscar style slug for --combo (e.g. dark-documentary)")
+    parser.add_argument("--post", type=str, default="hdr", choices=["hdr", "gtao", "crt", "none"], help="Post-FX pass for --combo")
+    parser.add_argument("--photo", type=str, default="", help="Optional /assets/... photo card with readability lock for --combo")
+    parser.add_argument("--width", type=int, default=1920, help="Frame width for --combo (e.g. 1920 or 1080)")
+    parser.add_argument("--height", type=int, default=1080, help="Frame height for --combo (e.g. 1080 or 1920)")
+    parser.add_argument("--total", type=float, default=6.0, help="Duration in seconds for --combo")
+    parser.add_argument("--n", type=int, default=4, help="Sub-frame samples for --combo (4=preview, 16=stills, 48=master)")
+    parser.add_argument("--video", action="store_true", help="Render MP4 video in --combo mode")
+    parser.add_argument("--audio", type=str, help="Mastered audio track to mux in --combo mode")
+    parser.add_argument("--handheld-csv", type=str, help="Motion CSV for real handheld camera shake pass")
     parser.add_argument("--workflow", action="store_true", help="Show the canonical 5-Step Director Workflow")
     parser.add_argument("--suggest-topics", action="store_true", help="Step 1: Print curated documentary topics")
     parser.add_argument("--list-gap-styles", action="store_true", help="Step 5(1): List styles for the 3 gap fallback engines")
@@ -116,6 +133,31 @@ def main():
 
     if args.list_styles:
         list_styles()
+        return
+
+    if args.list_combos or args.combo:
+        combo_script = os.path.join(DOC_SCRIPTS, "combo_runner.py")
+        if args.list_combos:
+            subprocess.run([sys.executable, combo_script, "--list"], check=True)
+            return
+        cmd = [
+            sys.executable, combo_script,
+            f"--shader={args.shader}", f"--brush={args.brush}",
+            f"--lemo={args.lemo}", f"--post={args.post}",
+            f"--width={args.width}", f"--height={args.height}",
+            f"--total={args.total}", f"--n={args.n}", f"--out={args.out}"
+        ]
+        if args.photo:
+            cmd.append(f"--photo={args.photo}")
+        if args.stills:
+            cmd.append(f"--stills={args.stills}")
+        elif args.video:
+            cmd.append("--video")
+            if args.audio:
+                cmd.append(f"--audio={args.audio}")
+        if args.handheld_csv:
+            cmd.append(f"--handheld-csv={args.handheld_csv}")
+        subprocess.run(cmd, check=True)
         return
 
     if args.suggest_topics or args.list_gap_styles or args.workflow:

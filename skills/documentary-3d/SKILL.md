@@ -77,3 +77,4 @@ Read [`references/style-guide.md`](references/style-guide.md) before planning sh
 | `vintage_engine.py` | Legacy silent-film 2D insert engine (optional gap insert). |
 | `kit/mix.py` & `mix_and_mux.py` | Sidechain ducking, cue placement, and EBU R128 `-14 LUFS` mastering. |
 | `splice.py` / `splice.sh` | Frame-accurate video segment splicing for gap inserts. |
+| `combo_runner.py` + `kit/combo_render.mjs` | **Universal Modular Combiner**: Runs all 15 verified combinations (3D-Animator + p5.brush + Lemo-Opuscar + Photos + Handheld). Read `../../guides/COMBINATIONS.md`. |

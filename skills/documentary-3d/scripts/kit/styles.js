@@ -356,6 +356,11 @@ function buildNeon(scene, at) {
 // ---------- one mesh in one look ----------
 function dress(o, look, ctx) {
   const lit = o.userData.lit, k = kindOf(o), each = (f) => (Array.isArray(lit) ? lit.map(f) : f(lit)), show = [];
+  if (o.userData.preserveReadable) {
+    o.material = lit;
+    for (const a of Object.values(o.userData.aux ?? {})) if (a) a.visible = false;
+    return;
+  }
   const cache = (name, f) => each((m) => (m.userData[name] ??= f(m)));
   let mat = lit;
   switch (look) {
@@ -420,4 +425,15 @@ export function setStyle(name = 'lit', { scene, key, fill, bloom, renderer, grad
   if (bloom) bloom.strength = L.bloom ?? saved.bloom;
   if (grade?.graphic) grade.graphic.value = L.graphic ? 1 : 0;   // flat graphic looks skip the film tone curve (keeps their colours exact)
   return name;
+}
+
+// Helper for mid-shot live look morphing synced to WhisperX cue timestamps:
+//   styleAt([[0, 'lit'], [2.5, 'blueprint'], [4.2, 'thermal']], t)
+export function styleAt(keyframes, t, fallback = 'lit') {
+  if (!Array.isArray(keyframes) || !keyframes.length) return fallback;
+  let active = keyframes[0][1] || fallback;
+  for (const [ts, look] of keyframes) {
+    if (t >= ts) active = look;
+  }
+  return active;
 }

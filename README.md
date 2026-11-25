@@ -26,6 +26,7 @@ documentary-3d-by-ashu-dalal/
 ├── rules/
 │   └── AGENTS.md               # Unified production & creative laws
 ├── guides/                     # Core directorial & production manuals
+│   ├── COMBINATIONS.md         # Universal 15 Modular Engine Combinations Guide (When, What, How)
 │   ├── DIRECTOR.md             # Narrative rhythm, music grid, camera blocking
 │   ├── TECHNIQUE.md            # Technical rendering, audio pipelines, QA
 │   ├── MY-STYLES.md            # Creating and customizing new styles
