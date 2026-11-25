@@ -46,13 +46,20 @@ documentary-3d-by-ashu-dalal/
     │   │   ├── sound.md
     │   │   └── style-guide.md
     │   └── scripts/
-    │       ├── board_engine.py      # 2.5D Evidence Board renderer
+    │       ├── board_engine.py      # 2.5D Evidence Board renderer (PRIMARY)
     │       ├── vintage_engine.py    # Vintage silent-film 2D engine
-    │       ├── align_timing.py      # Silence detection & timing aligner
-    │       ├── sound_bed.py         # Algorithmic drone & pulse synthesizer
+    │       ├── director_workflow.py # Step 1B-5(1) plan.md & gap consultation
+    │       ├── asset_fetcher.py     # Multi-source archival image fetcher
+    │       ├── model_fetcher.py     # CC0/open 3D .glb/.gltf model fetcher
+    │       ├── audio_sync.py        # WhisperX / Whisper word alignment
+    │       ├── openverse_sfx.py     # Multi-source CC audio & SFX engine
+    │       ├── combo_runner.py      # Universal 15-combo modular runner
+    │       ├── sound_bed.py         # Legacy synth (silenced by default)
     │       ├── mix_and_mux.py/.sh   # Sidechain ducking & -14 LUFS multiplexer
     │       ├── splice.py/.sh        # Frame-accurate video splicing
-    │       └── kit/                 # 3D Procedural Engine & Presentation Tools
+    │       └── kit/                 # 3D Procedural Engine, Combo & Presentation Tools
+    │           ├── combo_film.js    # Universal combo 3D+Brush+Lemo+GLTF stage
+    │           ├── combo_render.mjs # Conflict-free headless combo server
     │           ├── index.html       # WebGL stage canvas
     │           ├── film.js          # 3D scene definition (pure function of time)
     │           ├── styles.js        # 12 artistic shader looks
@@ -64,6 +71,7 @@ documentary-3d-by-ashu-dalal/
     │               ├── phone_motion.py # Camera shake extractor (2D FFT)
     │               ├── handheld.py     # Camera shake injector
     │               └── laptop_reel.py/.sh # Laptop/phone mockup reel generator
+    ├── code-3d-video/          # Primary 3D Documentary Kit (`--init-3d`)
     ├── p5-brush/               # Natural Media Generative Drawing Skill
     │   ├── SKILL.md            # Brush usage & animation guide
     │   ├── llms.txt            # Complete API spec for code generation
@@ -71,10 +79,10 @@ documentary-3d-by-ashu-dalal/
     │   ├── src/                # Full library source code
     │   ├── examples/           # Official demo sketches
     │   └── kit/                # Ready-to-render template (render_brush.mjs)
-    └── lemo-opuscar/           # 100+ Film Styles & Studio Skill
+    └── lemo-opuscar/           # 99 Film Styles & Studio Skill
         ├── SKILL.md            # Production guide for styles
         ├── core/               # Shared rendering, audio, post-processing tools
-        └── styles/             # 100 complete film style folders
+        └── styles/             # 99 complete film style folders
 ```
 
 ---
@@ -105,8 +113,8 @@ Switch styles on the fly via query parameter or flag (`--style=<name>`):
 - Camera blocking without static monotony.
 - Minimum 1.8-second subtitle duration rules.
 
-### 4. Broadcast Audio Engineering (Openverse Default)
-- **Active Default (`openverse_sfx.py`)**: Real CC-licensed SFX (`whoosh`, `paper`, `stamp`, `typing`, `thud`) and ambient music beds fetched from the **WordPress Openverse Audio API** (`https://api.openverse.org/v1/audio/`), normalized to `48 kHz` WAV and logged to `openverse_attribution.json`.
+### 4. Broadcast Audio Engineering (Multi-Source CC Default)
+- **Active Default (`openverse_sfx.py`)**: Real CC/Public-Domain SFX (`whoosh`, `paper`, `stamp`, `typing`, `thud`, `siren`) and ambient music beds fetched across **Openverse Audio API**, **Wikimedia Commons Audio**, **Internet Archive Audio**, optional **Freesound API v2** (`FREESOUND_API_KEY`), and `--from-urls`, normalized to `48 kHz` WAV and logged to `openverse_attribution.json`.
 - **Silenced Legacy Fallback (`sound_bed.py`, `gen_sfx.py`)**: Preserved intact inside the plugin but **silenced by default** via `sound_config.json` (`"active_engine": "openverse"`). Switchable anytime via `python studio.py --sound-mode=legacy_synth`.
 - Automatic sidechain ducking of background music under speech and master normalization strictly calibrated to **-14 LUFS** and **-1.5 dBTP** (EBU R128).
 
@@ -114,30 +122,31 @@ Switch styles on the fly via query parameter or flag (`--style=<name>`):
 
 ## 🛠️ Quick Commands
 
-### 1. Render 3D Scenes:
+### 1. Generate `plan.md`, Fetch Real Assets, 3D Models & SFX:
 ```bash
-cd skills/documentary-3d/scripts/kit
-npm run stills
-npm run preview
-npm run final
+python studio.py --plan --topic="Stuxnet" --script-file=script.txt --out=plan.md
+python studio.py --fetch-assets="Stuxnet,Natanz" --out=assets
+python studio.py --fetch-models="camera,desk" --out=models --res=1k
+python studio.py --fetch-sfx="whoosh,paper,stamp" --out=sound
 ```
 
-### 2. Render p5.brush Generative Drawings:
+### 2. Render Modular Combinations & 3D Models:
 ```bash
-cd skills/p5-brush/kit
-npm run stills
-npm run preview
+python studio.py --list-combos
+python studio.py --combo --shader=paper --brush=watercolor --lemo=dark-documentary --post=gtao --stills=1.5,3.5
+python studio.py --combo --shader=blueprint --model=models/Camera_01/Camera_01_1k.gltf --brush=flow_field --stills=2.0
 ```
 
-### 3. Render 2.5D Evidence Board:
+### 3. Auto-Bootstrap & Render `code-3d-video` / Primary Board:
 ```bash
-cd skills/documentary-3d/scripts
-python board_engine.py stills 2,5
-python board_engine.py full 0 300 board.mp4
+python studio.py --init-3d my_3d_project
+python studio.py --render-board --script=my_project/board_engine.py --stills=2,5
 ```
 
-### 4. Create Vertical Mockup Reel (9:16):
+### 4. Standalone Engines & Vertical Mockup Reel (9:16):
 ```bash
+python studio.py --render-3d --style=blueprint --stills=2.5
+python studio.py --render-brush --stills=2.5
 python skills/documentary-3d/scripts/kit/present/laptop_reel.py laptop.png out/final.mp4 200 450 680 380 out/reel.mp4 motion.csv
 ```
 

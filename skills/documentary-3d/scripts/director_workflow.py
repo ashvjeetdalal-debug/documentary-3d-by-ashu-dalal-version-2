@@ -351,7 +351,8 @@ def format_step5_consultation_prompt(gap_segments: List[Dict[str, Any]]) -> str:
     for i, gap in enumerate(gap_segments, 1):
         msg.append(f"{i}. **[{gap['start']:.1f}s - {gap['end']:.1f}s]** ({gap['duration']}s): *\"{gap['text']}\"*")
 
-    msg.append("\n*Batayein in khali parts ke liye konsa engine aur style use karna hai? Agar aapko **aur styles** chahiye toh bas bolen — hum poori 100+ styles ki list dikha denge.*")
+    msg.append("\n*Note: Detailed internet-researched gap designs & 3D `.glb` model suggestions `plan.md` me saved hain.*")
+    msg.append("*Batayein in khali parts ke liye konsa engine, combo aur style use karna hai? Agar aapko **aur styles** chahiye toh bas bolen — hum poori 99 styles ki list dikha denge.*")
     return "\n".join(msg)
 
 def main():
